@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'package:provider/provider.dart';
 import 'stars_animation.dart';
 import '../../pages/sleep_stream_meditation_page.dart';
+import '../../core/stores/meditation_store.dart';
+import '../../shared/models/meditation_profile_data.dart';
 
 class GeneratingMeditation extends StatefulWidget {
   final String title;
   final String subtitle;
   final String videoAsset;
   final double bottomPadding;
+  final MeditationProfileData? profileData; // Profile ma'lumotlari
 
   const GeneratingMeditation({
     super.key,
@@ -15,6 +19,7 @@ class GeneratingMeditation extends StatefulWidget {
     this.subtitle = 'We\'re shaping your vision\ninto a meditative journey...',
     this.videoAsset = 'assets/videos/moon.mp4',
     this.bottomPadding = 80,
+    this.profileData, // Yangi parameter
   });
 
   @override
@@ -24,45 +29,150 @@ class GeneratingMeditation extends StatefulWidget {
 class _GeneratingMeditationState extends State<GeneratingMeditation> {
   VideoPlayerController? _controller;
   bool _isInitialized = false;
+  bool _isGenerating = true;
+  String _statusMessage = 'We\'re shaping your vision\ninto a meditative journey...';
 
   @override
   void initState() {
     super.initState();
     _initializeVideoController();
+    // initState da setState chaqirish muammosini oldini olish uchun keyingi frame da ishga tushiramiz
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startProfileGeneration();
+    });
   }
 
   Future<void> _initializeVideoController() async {
     try {
       _controller = VideoPlayerController.asset(widget.videoAsset);
-      
+
       await _controller!.initialize();
-      
+
       if (mounted) {
         setState(() {
           _isInitialized = true;
         });
-        
+
         _controller!
-          ..setLooping(false)
+          ..setLooping(true)
           ..setVolume(0)
           ..play();
-        
-        // 1 sekunddan keyin video ni to'liq to'xtat va SleepStreamMeditationPage ga o'tish
-        Future.delayed(const Duration(seconds: 4), () {
-          if (mounted) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const SleepStreamMeditationPage()),
-            );
-          }
-        });
       }
     } catch (e) {
-      debugPrint('Video controller initialization error: $e');
       if (mounted) {
         setState(() {
           _isInitialized = false;
         });
       }
+    }
+  }
+
+  Future<void> _startProfileGeneration() async {
+    if (widget.profileData == null) {
+      _showErrorAndNavigate();
+      return;
+    }
+
+
+    try {
+      setState(() {
+        _statusMessage = 'We\'re shaping your vision\ninto a meditative journey...';
+      });
+
+      // MeditationStore ni olish - listen: false bilan olish kerak
+      final meditationStore = Provider.of<MeditationStore>(context, listen: false);
+      
+      // Force reload ritual settings from storage to ensure latest values
+      await meditationStore.loadRitualSettings();
+      
+      // Storage dan ma'lumotlarni o'qish
+      final storedRitualType = meditationStore.storedRitualType;
+      final storedTone = meditationStore.storedTone;
+      final storedDuration = meditationStore.storedDuration;
+      
+      
+      // Auth store dan yangi ma'lumotlarni ustun qo'yish
+      final ritualTypeValue = storedRitualType?.isNotEmpty == true 
+          ? storedRitualType! 
+          : (widget.profileData!.ritualType?.isNotEmpty == true 
+              ? widget.profileData!.ritualType!.first 
+              : '');
+      final toneValue = storedTone?.isNotEmpty == true 
+          ? storedTone! 
+          : (widget.profileData!.tone?.isNotEmpty == true 
+              ? widget.profileData!.tone!.first 
+              : '');
+      final durationValue = storedDuration?.isNotEmpty == true 
+          ? storedDuration! 
+          : (widget.profileData!.duration?.isNotEmpty == true 
+              ? widget.profileData!.duration!.first 
+              : '5');
+      
+      
+      // Profile ma'lumotlarini API ga yuborish
+      await meditationStore.postCombinedProfile(
+        gender: widget.profileData!.gender ?? '',
+        dream: widget.profileData!.dream?.isNotEmpty == true ? widget.profileData!.dream!.first : '',
+        goals: widget.profileData!.goals?.isNotEmpty == true ? widget.profileData!.goals!.first : '',
+        ageRange: widget.profileData!.ageRange ?? '',
+        happiness: widget.profileData!.happiness?.isNotEmpty == true ? widget.profileData!.happiness!.first : '',
+        name: widget.profileData!.name ?? '',
+        description: widget.profileData!.description ?? '',
+        ritualType: ritualTypeValue,
+        tone: toneValue,
+        voice: widget.profileData!.voice?.isNotEmpty == true ? widget.profileData!.voice!.first : 'male',
+        duration: durationValue,
+        planType: widget.profileData!.planType,
+      );
+
+      // // Free trial ni assign qilish
+      // setState(() {
+      //   _statusMessage = 'Setting up your free trial...';
+      // });
+
+      // await authStore.assignFreeTrial();
+
+      // Muvaffaqiyatli natija
+      if (mounted) {
+        setState(() {
+          _isGenerating = false;
+          // _statusMessage = 'Your meditation is ready!';
+        });
+
+        // Qisqa kutish va keyin o'tish
+        await Future.delayed(const Duration(seconds: 2));
+        
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (_) => const SleepStreamMeditationPage(),
+            ),
+          );
+        }
+      }
+
+    } catch (e) {
+      _showErrorAndNavigate();
+    }
+  }
+
+  void _showErrorAndNavigate() {
+    if (mounted) {
+      setState(() {
+        _isGenerating = false;
+        _statusMessage = 'Something went wrong.\nPlease try again.';
+      });
+
+      // Xatolik xabarini ko'rsatish va keyin o'tish
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (_) => const SleepStreamMeditationPage(),
+            ),
+          );
+        }
+      });
     }
   }
 
@@ -89,6 +199,20 @@ class _GeneratingMeditationState extends State<GeneratingMeditation> {
               ),
             ),
           ),
+        // Gradient overlay
+        Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xE63B6EAA), // 90% opacity
+                Color(0xE6A4C7EA),
+              ],
+            ),
+          ),
+        ),
+
         Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
@@ -98,22 +222,37 @@ class _GeneratingMeditationState extends State<GeneratingMeditation> {
               Text(
                 widget.title,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: Color(0xFFF2EFEA),
                   fontSize: 36,
                   fontFamily: 'Canela',
+                  decoration: TextDecoration.none,
+                  fontWeight: FontWeight.w400,
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
               Text(
-                widget.subtitle,
+                _statusMessage, // Dinamik status xabari
                 style: const TextStyle(
                   color: Color(0xFFF2EFEA),
                   fontSize: 16,
                   fontFamily: 'Satoshi-Regular',
+                  decoration: TextDecoration.none,
+                  fontWeight: FontWeight.w400,
                 ),
                 textAlign: TextAlign.center,
               ),
+              if (_isGenerating) ...[
+                const SizedBox(height: 24),
+                const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFF2EFEA)),
+                  ),
+                ),
+              ],
               SizedBox(height: widget.bottomPadding),
             ],
           ),
@@ -121,4 +260,4 @@ class _GeneratingMeditationState extends State<GeneratingMeditation> {
       ],
     );
   }
-} 
+}

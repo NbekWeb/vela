@@ -10,8 +10,8 @@ class VaultStatCard extends StatelessWidget {
     this.unit,
     required this.label,
     this.unitBelow = false,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +19,7 @@ class VaultStatCard extends StatelessWidget {
       height: 76,
       padding: const EdgeInsets.symmetric(horizontal: 18),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.22),
+        color: Colors.white.withValues(alpha: 0.22),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -41,13 +41,13 @@ class VaultStatCard extends StatelessWidget {
                         textBaseline: TextBaseline.alphabetic,
                       ),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: 2),
                     Text(
                       unit!,
                       style: const TextStyle(
                         fontFamily: 'Satoshi-Bold',
                         color: Colors.white,
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                         textBaseline: TextBaseline.alphabetic,
                       ),
@@ -104,7 +104,7 @@ class VaultStatCard extends StatelessWidget {
                         style: const TextStyle(
                           fontFamily: 'Satoshi-Bold',
                           color: Colors.white,
-                          fontSize: 16,
+                          fontSize: 14,
                           fontWeight: FontWeight.bold,
                           height: 1.1,
                         ),

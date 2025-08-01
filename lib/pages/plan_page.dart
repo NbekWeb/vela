@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import '../shared/widgets/auth.dart';
+import 'package:provider/provider.dart';
+
 import '../styles/pages/plan_page_styles.dart';
 import 'components/plan_switch.dart';
 import 'components/plan_info_card.dart';
+import '../shared/widgets/auth.dart';
+import '../core/stores/auth_store.dart';
 
 enum PlanStep { choosePlan, dreamLifeIntro }
 enum PlanType { annual, monthly }
@@ -84,7 +87,13 @@ class _PlanPageState extends State<PlanPage> {
               height: 56,
               child: ElevatedButton(
                 style: PlanPageStyles.mainButton,
-                onPressed: _goToNextStep,
+                onPressed: () async {
+                  final authStore = context.read<AuthStore>();
+                  await authStore.assignFreeTrial();
+                  if (!authStore.isLoading && authStore.error == null) {
+                    _goToNextStep();
+                  }
+                },
                 child: const Text(
                   'Start my free trial',
                   style: TextStyle(

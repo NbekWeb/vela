@@ -38,7 +38,7 @@ class LoginPageStyles {
   );
 
   static const TextStyle signUpTextStyle = TextStyle(
-    color: BaseStyles.white70,
+    color: BaseStyles.cream,
     fontSize: 12,
     fontFamily: 'Satoshi',
     fontWeight: FontWeight.w700,
@@ -140,11 +140,11 @@ class LoginPageStyles {
   );
 
   static const IconThemeData prefixIconTheme = IconThemeData(
-    color: BaseStyles.white70,
+    color: BaseStyles.cream,
   );
 
   static const IconThemeData suffixIconTheme = IconThemeData(
-    color: BaseStyles.white70,
+    color: BaseStyles.cream,
   );
 
   // Container Styles

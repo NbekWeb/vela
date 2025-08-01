@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../shared/widgets/stars_animation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({super.key});
@@ -11,6 +12,7 @@ class LoadingScreen extends StatefulWidget {
 
 class _LoadingScreenState extends State<LoadingScreen>
     with TickerProviderStateMixin {
+  final _secureStorage = const FlutterSecureStorage();
   late AnimationController _circleController;
   late Animation<double> _circleScale;
   int _count = 1;
@@ -51,9 +53,10 @@ class _LoadingScreenState extends State<LoadingScreen>
       setState(() => _count = i);
       await Future.delayed(const Duration(seconds: 1));
     }
-    if (mounted) {
-      Navigator.of(context).pushReplacementNamed('/starter');
-    }
+    // If we reach here, it means user is not authenticated
+    // Navigate to starter page
+    if (!mounted) return;
+    Navigator.of(context).pushReplacementNamed('/starter');
   }
 
   @override

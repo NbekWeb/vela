@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import '../shared/widgets/stars_animation.dart';
+import '../shared/widgets/personalized_meditation_modal.dart';
 import 'package:just_audio/just_audio.dart' as just_audio;
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:share_plus/share_plus.dart';
@@ -8,12 +10,19 @@ import 'components/sleep_meditation_audio_player.dart';
 import 'components/sleep_meditation_control_bar.dart';
 import 'components/sleep_meditation_waveform.dart';
 import 'components/sleep_meditation_action_buttons.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:provider/provider.dart';
+import '../core/stores/meditation_store.dart';
+import '../core/stores/like_store.dart';
+
+final _secureStorage = FlutterSecureStorage();
 
 class SleepStreamMeditationPage extends StatefulWidget {
   const SleepStreamMeditationPage({super.key});
 
   @override
-  State<SleepStreamMeditationPage> createState() => _SleepStreamMeditationPageState();
+  State<SleepStreamMeditationPage> createState() =>
+      _SleepStreamMeditationPageState();
 }
 
 class _SleepStreamMeditationPageState extends State<SleepStreamMeditationPage> {
@@ -26,61 +35,173 @@ class _SleepStreamMeditationPageState extends State<SleepStreamMeditationPage> {
   Duration _position = Duration.zero;
   bool _isLiked = false;
   bool _isMuted = false;
+  String? fileUrl;
 
   @override
   void initState() {
     super.initState();
-    _initializeAudioPlayer();
+    _configureAudioSession();
+    _loadAndPlayMeditation();
   }
+
+  Future<void> _configureAudioSession() async {
+    try {
+      // iOS uchun audio session configuration
+      if (Platform.isIOS) {
+        // iOS specific audio configuration
+        debugPrint('Configuring iOS audio session...');
+      }
+    } catch (e) {
+      debugPrint('Error configuring audio session: $e');
+    }
+  }
+
+  Future<void> _loadAndPlayMeditation() async {
+    try {
+      debugPrint('Loading meditation audio...');
+      
+      // MeditationStore dan meditation profile ni olish
+      final meditationStore = Provider.of<MeditationStore>(context, listen: false);
+      final profileData = meditationStore.meditationProfile;
+
+      // Profile data dan file_url ni olish
+      if (profileData?.fileUrl != null && profileData!.fileUrl!.isNotEmpty) {
+        fileUrl = profileData.fileUrl;
+        debugPrint('Got fileUrl from profile: $fileUrl');
+      } else {
+        // Fallback: storage dan olish
+        fileUrl = await _secureStorage.read(key: 'meditation_file_url');
+        debugPrint('Got fileUrl from storage: $fileUrl');
+      }
+
+      // Dispose previous audio player if exists
+      await _audioPlayer?.dispose();
+      _audioPlayer = just_audio.AudioPlayer();
+      _waveformController = PlayerController();
+
+      if (fileUrl != null && fileUrl!.isNotEmpty) {
+        debugPrint('Setting audio URL: $fileUrl');
+        await _audioPlayer!.setUrl(fileUrl!);
+        debugPrint('Audio URL set successfully');
+
+        // Listen to player state changes
+        _audioPlayer!.playerStateStream.listen((state) {
+          debugPrint('Player state: ${state.processingState} - playing: ${state.playing}');
+          if (mounted) {
+            setState(() {
+              _isPlaying = state.playing;
+              _isAudioReady =
+                  state.processingState == just_audio.ProcessingState.ready;
+            });
+          }
+        });
+
+        // Listen to duration changes
+        _audioPlayer!.durationStream.listen((duration) {
+          debugPrint('Duration: $duration');
+          if (mounted) {
+            setState(() {
+              _duration = duration ?? const Duration(minutes: 3, seconds: 29);
+            });
+          }
+        });
+
+        // Listen to position changes
+        _audioPlayer!.positionStream.listen((position) {
+          if (mounted) {
+            setState(() {
+              _position = position;
+            });
+          }
+        });
+
+        setState(() {
+          _isAudioReady = true;
+        });
+
+        debugPrint('Audio player initialized successfully');
+        
+        // Prepare waveform after audio player is ready
+        await _prepareWaveform();
+      } else {
+        debugPrint('No fileUrl available');
+        setState(() {
+          _isAudioReady = true;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error in _loadAndPlayMeditation: $e');
+      setState(() {
+        _isAudioReady = true;
+      });
+    }
+  }
+
+
 
   Future<void> _initializeAudioPlayer() async {
     try {
       _audioPlayer = just_audio.AudioPlayer();
       _waveformController = PlayerController();
-      
-      // Set up audio player
-      await _audioPlayer!.setAsset('assets/audio/ex.mp3');
-      debugPrint('Asset set successfully');
-      
-      // Listen to player state changes
-      _audioPlayer!.playerStateStream.listen((state) {
-        debugPrint('Player state changed: ${state.playing}, processing: ${state.processingState}');
-        if (mounted) {
-          setState(() {
-            _isPlaying = state.playing;
-            _isAudioReady = state.processingState == just_audio.ProcessingState.ready;
-          });
-        }
-      });
 
-      // Listen to duration changes
-      _audioPlayer!.durationStream.listen((duration) {
-        debugPrint('Duration changed: $duration');
-        if (mounted) {
-          setState(() {
-            _duration = duration ?? const Duration(minutes: 3, seconds: 29);
-          });
-        }
-      });
+      // MeditationStore dan meditation profile ni olish
+      final meditationStore = Provider.of<MeditationStore>(context, listen: false);
+      final profileData = meditationStore.meditationProfile;
 
-      // Listen to position changes
-      _audioPlayer!.positionStream.listen((position) {
-        if (mounted) {
-          setState(() {
-            _position = position;
-          });
-        }
-      });
+      // Profile data dan file_url ni olish
+      String? audioFileUrl;
+      if (profileData?.fileUrl != null && profileData!.fileUrl!.isNotEmpty) {
+        audioFileUrl = profileData.fileUrl;
+      } else {
+        // Fallback: storage dan olish
+        audioFileUrl = await _secureStorage.read(key: 'meditation_file_url');
+       
+      }
 
-      setState(() {
-        _isAudioReady = true;
-      });
+      if (audioFileUrl != null && audioFileUrl.isNotEmpty) {
+        await _audioPlayer!.setUrl(audioFileUrl);
 
-      // Prepare waveform after audio player is ready
-      await _prepareWaveform();
-      debugPrint('Audio player initialized successfully');
+        // Listen to player state changes
+        _audioPlayer!.playerStateStream.listen((state) {
+          if (mounted) {
+            setState(() {
+              _isPlaying = state.playing;
+              _isAudioReady =
+                  state.processingState == just_audio.ProcessingState.ready;
+            });
+          }
+        });
+
+        // Listen to duration changes
+        _audioPlayer!.durationStream.listen((duration) {
+          if (mounted) {
+            setState(() {
+              _duration = duration ?? const Duration(minutes: 3, seconds: 29);
+            });
+          }
+        });
+
+        // Listen to position changes
+        _audioPlayer!.positionStream.listen((position) {
+          if (mounted) {
+            setState(() {
+              _position = position;
+            });
+          }
+        });
+
+        setState(() {
+          _isAudioReady = true;
+        });
+
+        // Prepare waveform after audio player is ready
+        await _prepareWaveform();
+      } else {
+        setState(() {
+          _isAudioReady = true;
+        });
+      }
     } catch (e) {
-      debugPrint('Error initializing audio player: $e');
       setState(() {
         _isAudioReady = true;
       });
@@ -91,7 +212,7 @@ class _SleepStreamMeditationPageState extends State<SleepStreamMeditationPage> {
     try {
       if (_waveformController != null) {
         await _waveformController!.preparePlayer(
-          path: 'assets/audio/ex.mp3',
+          path: fileUrl ?? '', // Use fileUrl here
           shouldExtractWaveform: true,
           noOfSamples: 80,
         );
@@ -110,6 +231,7 @@ class _SleepStreamMeditationPageState extends State<SleepStreamMeditationPage> {
 
   @override
   void dispose() {
+    _audioPlayer?.stop();
     _audioPlayer?.dispose();
     _waveformController?.dispose();
     super.dispose();
@@ -117,17 +239,13 @@ class _SleepStreamMeditationPageState extends State<SleepStreamMeditationPage> {
 
   void _togglePlayPause() async {
     try {
-      debugPrint('Toggle play/pause called. Current state: $_isPlaying');
-      debugPrint('Audio ready: $_isAudioReady, Duration: $_duration');
-      
+
       if (_audioPlayer == null) {
-        debugPrint('Audio player is null, initializing...');
         await _initializeAudioPlayer();
         return;
       }
-      
+
       if (_isPlaying) {
-        debugPrint('Pausing audio...');
         await _audioPlayer!.pause();
         if (_waveformReady && _waveformController != null) {
           try {
@@ -137,18 +255,15 @@ class _SleepStreamMeditationPageState extends State<SleepStreamMeditationPage> {
           }
         }
       } else {
-        debugPrint('Playing audio...');
-        
-        // Ensure audio is ready before playing
+
         if (!_isAudioReady) {
-          debugPrint('Audio not ready, trying to initialize...');
-          await _audioPlayer!.setAsset('assets/audio/ex.mp3');
+          await _audioPlayer!.setUrl(fileUrl!);
           setState(() {
             _isAudioReady = true;
             _duration = const Duration(minutes: 3, seconds: 29);
           });
         }
-        
+
         await _audioPlayer!.play();
         if (_waveformReady && _waveformController != null) {
           try {
@@ -170,10 +285,24 @@ class _SleepStreamMeditationPageState extends State<SleepStreamMeditationPage> {
     });
   }
 
-  void _toggleLike() {
-    setState(() {
-      _isLiked = !_isLiked;
-    });
+  void _toggleLike() async {
+    final meditationStore = context.read<MeditationStore>();
+    final likeStore = context.read<LikeStore>();
+    
+    // Get meditation ID from ritual data
+    final meditationId = meditationStore.meditationProfile?.ritual?['id']?.toString();
+    
+    if (meditationId != null) {
+      await likeStore.toggleLike(meditationId);
+      setState(() {
+        _isLiked = likeStore.isLiked(meditationId);
+      });
+    } else {
+      // Fallback to local state if no meditation ID
+      setState(() {
+        _isLiked = !_isLiked;
+      });
+    }
   }
 
   void _shareMeditation() async {
@@ -181,25 +310,23 @@ class _SleepStreamMeditationPageState extends State<SleepStreamMeditationPage> {
   }
 
   void _resetMeditation() {
-    // Reset functionality - can be implemented as needed
-    debugPrint('Reset meditation');
+    // Complete reset of meditation store and navigate to generator
+    context.read<MeditationStore>().completeReset();
+    Navigator.pushReplacementNamed(context, '/generator');
   }
 
   void _saveToVault() {
-    Navigator.pushNamed(context, '/vault');
+    Navigator.pushReplacementNamed(context, '/vault');
   }
 
-  void _testAudio() async {
-    debugPrint('Testing audio...');
-    try {
-      if (_audioPlayer != null) {
-        await _audioPlayer!.setAsset('assets/audio/ex.mp3');
-        await _audioPlayer!.play();
-        debugPrint('Test audio started');
-      }
-    } catch (e) {
-      debugPrint('Test audio failed: $e');
-    }
+  void _showPersonalizedMeditationInfo() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return const PersonalizedMeditationModal();
+      },
+    );
   }
 
   @override
@@ -221,11 +348,16 @@ class _SleepStreamMeditationPageState extends State<SleepStreamMeditationPage> {
                         children: [
                           SleepMeditationHeader(
                             onBackPressed: () => Navigator.of(context).pop(),
-                            onInfoPressed: _testAudio,
+                            onInfoPressed: _showPersonalizedMeditationInfo,
                           ),
-                          SleepMeditationAudioPlayer(
-                            isPlaying: _isPlaying,
-                            onPlayPausePressed: _togglePlayPause,
+                          Consumer<MeditationStore>(
+                            builder: (context, meditationStore, child) {
+                              return SleepMeditationAudioPlayer(
+                                isPlaying: _isPlaying,
+                                onPlayPausePressed: _togglePlayPause,
+                                profileData: meditationStore.meditationProfile,
+                              );
+                            },
                           ),
                           const SizedBox(height: 24),
                           SleepMeditationControlBar(
@@ -236,9 +368,28 @@ class _SleepStreamMeditationPageState extends State<SleepStreamMeditationPage> {
                             onShare: _shareMeditation,
                           ),
                           const SizedBox(height: 24),
-                          SleepMeditationWaveform(
-                            waveformReady: _waveformReady,
-                            waveformController: _waveformController,
+                          Column(
+                            children: [
+                              Slider(
+                                value: _position.inSeconds.toDouble().clamp(
+                                  0,
+                                  _duration.inSeconds.toDouble(),
+                                ),
+                                min: 0,
+                                max: _duration.inSeconds.toDouble(),
+                                onChanged: (value) async {
+                                  final newPosition = Duration(
+                                    seconds: value.toInt(),
+                                  );
+                                  await _audioPlayer?.seek(newPosition);
+                                  setState(() {
+                                    _position = newPosition;
+                                  });
+                                },
+                                activeColor: Colors.white,
+                                inactiveColor: Colors.white.withOpacity(0.3),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -258,4 +409,4 @@ class _SleepStreamMeditationPageState extends State<SleepStreamMeditationPage> {
       ),
     );
   }
-} 
+}

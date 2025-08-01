@@ -7,6 +7,7 @@ import '../../styles/pages/starter_page_styles.dart';
 import '../../styles/components/button_styles.dart';
 import '../../styles/components/text_styles.dart';
 import '../../styles/components/spacing_styles.dart';
+import '../../styles/base_styles.dart';
 
 class StarterPage extends StatefulWidget {
   const StarterPage({super.key});
@@ -44,7 +45,6 @@ class _StarterPageState extends State<StarterPage> {
           ..play();
       }
     } catch (e) {
-      debugPrint('Video controller initialization error: $e');
       if (mounted) {
         setState(() {
           _isInitialized = false;
@@ -100,9 +100,10 @@ class _StarterPageState extends State<StarterPage> {
                             color: StarterPageStyles.iconColor,
                           ),
                         ),
-                        Text(
-                          'vela',
-                          style: TextStyles.brandText,
+                        Image.asset(
+                          'assets/img/logo.png',
+                          width: 60,
+                          height: 40,
                         ),
                         GestureDetector(
                           onTap: () {
@@ -132,7 +133,7 @@ class _StarterPageState extends State<StarterPage> {
                       style: TextStyles.bodyLarge,
                     ),
                   ),
-                  SpacingStyles.spacingLarge,
+                  const SizedBox(height: 20),
                   Padding(
                     padding: SpacingStyles.paddingHorizontal,
                     child: ElevatedButton(
@@ -152,9 +153,19 @@ class _StarterPageState extends State<StarterPage> {
                       Navigator.pushNamed(context, '/login');
                     },
                     style: ButtonStyles.text,
-                    child: Text(
-                      'Already have an account? Sign in',
-                      style: ButtonStyles.linkText,
+                    child: RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: 'Already have an account? ',
+                            style: BaseStyles.signInLinkText,
+                          ),
+                          TextSpan(
+                            text: 'Sign in',
+                            style: BaseStyles.signInUnderlinedText,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   SpacingStyles.spacingSmall,

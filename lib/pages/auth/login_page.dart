@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../../core/services/auth_service.dart';
+import 'package:provider/provider.dart';
+
 import '../../core/utils/validators.dart';
 import '../../shared/widgets/stars_animation.dart';
 import '../../styles/base_styles.dart';
 import '../../styles/pages/login_page_styles.dart';
 import '../../shared/widgets/how_work_modal.dart';
+import '../../core/stores/auth_store.dart';
 import 'package:flutter/services.dart';
 
 class LoginPage extends StatefulWidget {
@@ -30,20 +32,15 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _handleGoogleSignIn() async {
-    setState(() {
-      _isLoading = true;
-    });
-    final authService = AuthService();
-    final userData = await authService.signInWithGoogle();
-    setState(() {
-      _isLoading = false;
-    });
-    if (userData != null && mounted) {
+    final authStore = context.read<AuthStore>();
+    await authStore.loginWithGoogle();
+    
+    if (authStore.isAuthenticated && mounted) {
       Navigator.pushReplacementNamed(context, '/plan');
-    } else {
+    } else if (authStore.error != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Google Sign-In was cancelled or an error occurred'),
+        SnackBar(
+          content: Text(authStore.error!),
           backgroundColor: Colors.orange,
         ),
       );
@@ -55,35 +52,21 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final authService = AuthService();
-      final userData = await authService.loginWithEmail(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
+    final authStore = context.read<AuthStore>();
+    await authStore.login(
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+    );
+    
+    if (authStore.isAuthenticated && mounted) {
+      Navigator.pushReplacementNamed(context, '/dashboard');
+    } else if (authStore.error != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authStore.error!),
+          backgroundColor: Colors.red,
+        ),
       );
-
-      if (userData != null && mounted) {
-        Navigator.pushReplacementNamed(context, '/plan');
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceAll('Exception: ', '')),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
     }
   }
 
@@ -164,12 +147,14 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
-      child: Scaffold(
+    return Consumer<AuthStore>(
+      builder: (context, authStore, child) {
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: const SystemUiOverlayStyle(
+            systemNavigationBarColor: Colors.white,
+            systemNavigationBarIconBrightness: Brightness.dark,
+          ),
+          child: Scaffold(
         body: GestureDetector(
           onTap: () => FocusScope.of(context).unfocus(),
           child: Stack(
@@ -269,8 +254,8 @@ class _LoginPageState extends State<LoginPage> {
                                     ),
                                     elevation: 2,
                                   ),
-                                  onPressed: _isLoading ? null : _handleEmailLogin,
-                                  child: _isLoading
+                                  onPressed: authStore.isLoading ? null : _handleEmailLogin,
+                                  child: authStore.isLoading
                                       ? const SizedBox(
                                           width: 20,
                                           height: 20,
@@ -285,44 +270,47 @@ class _LoginPageState extends State<LoginPage> {
                                         ),
                                 ),
                               ),
-                              const SizedBox(height: 48),
-                              Center(
-                                child: Text(
-                                  '- or continue with -',
-                                  style: LoginPageStyles.orContinueStyle.copyWith(color: Colors.white),
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  _buildSocialButton(asset: 'assets/icons/apple.svg', onTap: () {}),
-                                  const SizedBox(width: 16),
-                                  _buildSocialButton(asset: 'assets/icons/google.svg', onTap: _isLoading ? (){} : _handleGoogleSignIn),
-                                  const SizedBox(width: 16),
-                                  _buildSocialButton(asset: 'assets/icons/facebook.svg', onTap: () {}),
-                                ],
-                              ),
-                              const SizedBox(height: 32),
-                              Center(
-                                child: GestureDetector(
-                                  onTap: () {
-                                    Navigator.pushNamed(context, '/register');
-                                  },
-                                  child: RichText(
-                                    text: TextSpan(
-                                      text: "Don't have an account? ",
-                                      style: LoginPageStyles.subtitleStyle.copyWith(color: Color(0xFFDCE6F0)),
-                                      children: [
-                                        TextSpan(
-                                          text: 'Sign up',
-                                          style: LoginPageStyles.orContinueStyle.copyWith(
-                                            color: Color(0xFFDCE6F0),
-                                            fontWeight: FontWeight.bold,
-                                            decoration: TextDecoration.underline,
+                              // const SizedBox(height: 48),
+                              // Center(
+                              //   child: Text(
+                              //     '- or continue with -',
+                              //     style: LoginPageStyles.orContinueStyle.copyWith(color: Colors.white),
+                              //   ),
+                              // ),
+                              // const SizedBox(height: 20),
+                              // Row(
+                              //   mainAxisAlignment: MainAxisAlignment.center,
+                              //   children: [
+                              //     _buildSocialButton(asset: 'assets/icons/apple.svg', onTap: () {}),
+                              //     const SizedBox(width: 16),
+                              //     _buildSocialButton(asset: 'assets/icons/google.svg', onTap: _isLoading ? (){} : _handleGoogleSignIn),
+                              //     const SizedBox(width: 16),
+                              //     _buildSocialButton(asset: 'assets/icons/facebook.svg', onTap: () {}),
+                              //   ],
+                              // ),
+                              // const SizedBox(height: 32),
+                              Padding(
+                                padding: const EdgeInsets.only(top: 20),
+                                child: Center(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.pushNamed(context, '/register');
+                                    },
+                                    child: RichText(
+                                      text: TextSpan(
+                                        text: "Don't have an account? ",
+                                        style: LoginPageStyles.subtitleStyle.copyWith(color: Color(0xFFDCE6F0)),
+                                        children: [
+                                          TextSpan(
+                                            text: 'Sign up',
+                                            style: LoginPageStyles.orContinueStyle.copyWith(
+                                              color: Color(0xFFDCE6F0),
+                                              fontWeight: FontWeight.bold,
+                                              decoration: TextDecoration.underline,
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -357,6 +345,8 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
       ),
+        );
+      },
     );
   }
 

@@ -4,13 +4,14 @@ class BaseStyles {
   // Colors
   static const Color primaryBlue = Color(0xFF3B6EAA);
   static const Color white = Color(0xFFFFFFFF);
-  static const Color white70 = Color(0xB3FFFFFF);
+  static const Color white70 = Color(0xFFF2EFEA);
   static const Color cream = Color(0xFFF2EFEA);
   static const Color transparentWhite = Color(0x2EFFFFFF);
   static const Color black = Color(0xFF000000);
   static const Color black10 = Color(0x1A000000);
   static const Color black15 = Color(0x26000000);
   static const Color black30 = Color(0x4D000000);
+  static const Color lightBlue = Color(0xFFA4C7EA);
 
   // Typography
   static const TextStyle headingLarge = TextStyle(
@@ -42,25 +43,26 @@ class BaseStyles {
     fontSize: 16,
     color: white70,
     fontFamily: 'Satoshi',
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w600,
     height: 1.25,
     decoration: TextDecoration.none,
   );
 
   static const TextStyle bodyMedium = TextStyle(
     fontSize: 16,
-    color: cream,
+    color: white70,
     fontFamily: 'Satoshi',
     height: 1.25,
     decoration: TextDecoration.none,
   );
 
   static const TextStyle buttonText = TextStyle(
-    fontSize: 20,
+    fontSize: 16,
     fontFamily: 'Satoshi',
     color: white,
     fontWeight: FontWeight.w700,
     decoration: TextDecoration.none,
+    height: 1.5,
   );
 
   static const TextStyle buttonTextSmall = TextStyle(
@@ -76,6 +78,20 @@ class BaseStyles {
     fontFamily: 'Satoshi',
     fontWeight: FontWeight.w700,
     decoration: TextDecoration.none,
+  );
+
+  static const TextStyle signInLinkText = TextStyle(
+    color: lightBlue,
+    fontFamily: 'Satoshi',
+    fontWeight: FontWeight.w700,
+    decoration: TextDecoration.none,
+  );
+
+  static const TextStyle signInUnderlinedText = TextStyle(
+    color: lightBlue,
+    fontFamily: 'Satoshi',
+    fontWeight: FontWeight.w700,
+    decoration: TextDecoration.underline,
   );
 
   // Spacing

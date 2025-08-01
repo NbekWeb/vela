@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'home.dart';
 import 'vault.dart';
 import 'check_in.dart';
@@ -8,7 +9,7 @@ import 'components/vault_icon.dart';
 import 'components/check_icon.dart';
 import 'components/profile_icon.dart';
 import '../generator/generator_page.dart';
-import 'dart:io' show Platform;
+import 'package:fluttertoast/fluttertoast.dart';
 
 class DashboardMainPage extends StatefulWidget {
   const DashboardMainPage({super.key});
@@ -37,7 +38,7 @@ class _DashboardMainPageState extends State<DashboardMainPage> {
           backgroundColor: Colors.transparent, // Scaffold background transparent bo‘lsin
           bottomNavigationBar: Container(
             margin: const EdgeInsets.only(bottom: 0),
-            padding: Platform.isIOS
+            padding: !kIsWeb && (Theme.of(context).platform == TargetPlatform.iOS)
               ? EdgeInsets.only(
                   top: 10,
                   bottom: 20 + MediaQuery.of(context).viewPadding.bottom,
@@ -126,7 +127,16 @@ class _DashboardMainPageState extends State<DashboardMainPage> {
                   icon: ProfileIcon(filled: _selectedIndex == 3, opacity: _selectedIndex == 3 ? 1.0 : 0.5),
                   label: 'Profile',
                   selected: _selectedIndex == 3,
-                  onTap: () => setState(() => _selectedIndex = 3),
+                  onTap: () {
+                    Fluttertoast.showToast(
+                      msg: "This page is under construction.",
+                      toastLength: Toast.LENGTH_SHORT,
+                      gravity: ToastGravity.TOP,
+                      backgroundColor: Colors.blue,
+                      textColor: Colors.white,
+                    );
+                    // setState(() => _selectedIndex = 3); // Agar sahifaga o‘tishni xohlamasangiz, bu qatorni olib tashlang
+                  },
                 ),
               ],
             ),

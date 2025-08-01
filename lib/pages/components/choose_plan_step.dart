@@ -10,7 +10,7 @@ class ChoosePlanStep extends StatelessWidget {
   final ValueChanged<PlanType> onPlanChanged;
   final VoidCallback onContinue;
 
-  const ChoosePlanStep({
+  const ChoosePlanStep({super.key, 
     required this.selectedPlan,
     required this.onPlanChanged,
     required this.onContinue,

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import '../shared/widgets/stars_animation.dart';
 import '../shared/widgets/full_width_track_shape.dart';
+import '../core/stores/check_in_store.dart';
 import 'dashboard/main.dart';
+import 'generator/generator_page.dart';
 
 class DailyCheckInPage extends StatelessWidget {
   const DailyCheckInPage({super.key});
@@ -54,8 +58,46 @@ class _CheckInAppBar extends StatelessWidget {
   }
 }
 
-class _CheckInForm extends StatelessWidget {
+class _CheckInForm extends StatefulWidget {
   const _CheckInForm();
+
+  @override
+  State<_CheckInForm> createState() => _CheckInFormState();
+}
+
+class _CheckInFormState extends State<_CheckInForm> {
+  double _sliderValue = 0.5; // Default neutral position
+  final TextEditingController _descriptionController = TextEditingController();
+
+  String _getMoodText(double value) {
+    if (value <= 0.30) {
+      return 'Struggling';
+    } else if (value <= 0.70) {
+      return 'Neutral';
+    } else {
+      return 'Excellent';
+    }
+  }
+
+  String _getCheckInChoice(double value) {
+    if (value <= 0.30) {
+      return 'struggling';
+    } else if (value <= 0.70) {
+      return 'neutral';
+    } else {
+      return 'excellent';
+    }
+  }
+
+  String _getMoodImage(double value) {
+    if (value <= 0.45) {
+      return 'assets/img/struggling.png'; // Struggling mood image
+    } else if (value <= 0.54) {
+      return 'assets/img/planet.png'; // Neutral mood image
+    } else {
+      return 'assets/img/excellent.png'; // Excellent mood image
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,21 +128,21 @@ class _CheckInForm extends StatelessWidget {
                   Text(
                     _formattedDate(),
                     style: const TextStyle(
-                      color: Colors.white70,
+                      color: Color(0xFFF2EFEA),
                       fontSize: 14,
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // O'rtadagi emoji o'rniga planet.png rasmidan foydalanamiz
+                  // Dynamic mood image
                   Image.asset(
-                    'assets/img/planet.png',
+                    _getMoodImage(_sliderValue),
                     width: 66,
                     height: 66,
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'Neutral',
-                    style: TextStyle(
+                  Text(
+                    _getMoodText(_sliderValue),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -122,8 +164,12 @@ class _CheckInForm extends StatelessWidget {
                         trackShape: const FullWidthTrackShape(),
                       ),
                       child: Slider(
-                        value: 0.5,
-                        onChanged: (v) {},
+                        value: _sliderValue,
+                        onChanged: (v) {
+                          setState(() {
+                            _sliderValue = v;
+                          });
+                        },
                         min: 0,
                         max: 1,
                       ),
@@ -135,7 +181,7 @@ class _CheckInForm extends StatelessWidget {
                       Expanded(
                         child: Text(
                           'Struggling',
-                          style: TextStyle(color: Colors.white70),
+                          style: TextStyle(color: Color(0xFFF2EFEA)),
                           textAlign: TextAlign.left,
                         ),
                       ),
@@ -149,7 +195,7 @@ class _CheckInForm extends StatelessWidget {
                       Expanded(
                         child: Text(
                           'Excellent',
-                          style: TextStyle(color: Colors.white70),
+                          style: TextStyle(color: Color(0xFFF2EFEA)),
                           textAlign: TextAlign.right,
                         ),
                       ),
@@ -167,25 +213,47 @@ class _CheckInForm extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Container(
+                  SizedBox(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(16),
                     height: 100,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Text(
-                      'I’m overwhelmed about my test — I need help calming down.',
-                      style: TextStyle(
+                    child: TextFormField(
+                      controller: _descriptionController,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 15,
                       ),
                       textAlign: TextAlign.center,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        hintText: 'I\'m overwhelmed about my test — I need help calming down.',
+                        hintStyle: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 15,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(
+                            color: Color.fromRGBO(21, 43, 86, 0.3),
+                            width: 1,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(
+                            color: Color.fromRGBO(21, 43, 86, 0.3),
+                            width: 2,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.all(16),
+                        fillColor: Color.fromRGBO(21, 43, 86, 0.1),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 32),
-                  _CheckInButtons(),
+                  _CheckInButtons(
+                    descriptionController: _descriptionController,
+                    sliderValue: _sliderValue,
+                  ),
                 ],
               ),
             ),
@@ -206,38 +274,100 @@ class _CheckInForm extends StatelessWidget {
     ];
     return days[weekday - 1];
   }
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    super.dispose();
+  }
 }
 
-class _CheckInButtons extends StatelessWidget {
-  const _CheckInButtons();
+class _CheckInButtons extends StatefulWidget {
+  final TextEditingController descriptionController;
+  final double sliderValue;
+
+  const _CheckInButtons({
+    required this.descriptionController,
+    required this.sliderValue,
+  });
+
+  @override
+  State<_CheckInButtons> createState() => _CheckInButtonsState();
+}
+
+class _CheckInButtonsState extends State<_CheckInButtons> {
+  void _handleCheckIn(BuildContext context, CheckInStore checkInStore) {
+    final checkInChoice = _getCheckInChoice(widget.sliderValue);
+    final description = widget.descriptionController.text.trim();
+    
+    if (description.isEmpty) {
+      Fluttertoast.showToast(
+        msg: 'Please enter a description',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.orange,
+        textColor: Colors.white,
+      );
+      return;
+    }
+
+    checkInStore.submitCheckIn(
+      checkInChoice: checkInChoice,
+      description: description,
+      onSuccess: () {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const DashboardMainPage()),
+        );
+      },
+    );
+  }
+
+  String _getCheckInChoice(double value) {
+    if (value <= 0.30) {
+      return 'struggling';
+    } else if (value <= 0.70) {
+      return 'neutral';
+    } else {
+      return 'excellent';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        SizedBox(
-          width: double.infinity,
-          height: 56,
-          child: ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => const DashboardMainPage()),
-              );
-            },
+    return Consumer<CheckInStore>(
+      builder: (context, checkInStore, child) {
+        return Column(
+          children: [
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: checkInStore.isLoading ? null : () {
+                  _handleCheckIn(context, checkInStore);
+                },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF3B6EAA),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(32),
               ),
             ),
-            child: const Text(
-              'Complete Check-In',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            child: checkInStore.isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Text(
+                    'Complete Check-In',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
           ),
         ),
         const SizedBox(height: 12),
@@ -247,7 +377,7 @@ class _CheckInButtons extends StatelessWidget {
           child: OutlinedButton(
             onPressed: () {
               Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => const DashboardMainPage()),
+                MaterialPageRoute(builder: (context) => const GeneratorPage()),
               );
             },
             style: OutlinedButton.styleFrom(
@@ -275,6 +405,8 @@ class _CheckInButtons extends StatelessWidget {
           ),
         ),
       ],
+    );
+      },
     );
   }
 } 

@@ -3,7 +3,7 @@ import '../../styles/pages/plan_page_styles.dart';
 import '../../shared/widgets/auth.dart';
 
 class DreamLifeIntroStep extends StatelessWidget {
-  const DreamLifeIntroStep();
+  const DreamLifeIntroStep({super.key});
 
   @override
   Widget build(BuildContext context) {

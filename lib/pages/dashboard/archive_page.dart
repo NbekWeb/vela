@@ -1,9 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../vault/vault_ritual_card.dart';
 import '../../shared/widgets/stars_animation.dart';
+import '../../core/stores/meditation_store.dart';
 
-class ArchivePage extends StatelessWidget {
+class ArchivePage extends StatefulWidget {
   const ArchivePage({super.key});
+
+  @override
+  State<ArchivePage> createState() => _ArchivePageState();
+}
+
+class _ArchivePageState extends State<ArchivePage> {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch archive meditations when page loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final meditationStore = Provider.of<MeditationStore>(
+        context,
+        listen: false,
+      );
+      meditationStore.restoreMeditation();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,28 +78,50 @@ class ArchivePage extends StatelessWidget {
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      children: const [
-                        VaultRitualCard(
-                          image: 'assets/img/card.png',
-                          title: 'Morning Meditation',
-                          subtitle:
-                              'Start your day with positive energy and clarity',
-                        ),
-                        SizedBox(height: 16),
-                        VaultRitualCard(
-                          image: 'assets/img/card.png',
-                          title: 'Evening Reflection',
-                          subtitle: 'Wind down and reflect on your day',
-                        ),
-                        SizedBox(height: 16),
-                        VaultRitualCard(
-                          image: 'assets/img/card.png',
-                          title: 'Serene Sunrise Yoga',
-                          subtitle:
-                              'Gentle stretches and breathing exercises to awaken your body and mind.',
-                        ),
-                      ],
+                    child: Consumer<MeditationStore>(
+                      builder: (context, meditationStore, child) {
+                        final archiveMeditation = meditationStore.archiveMeditation;
+                        final archiveCount = archiveMeditation?.length ?? 0;
+                        
+                        if (archiveCount > 0) {
+                          // Show cards based on archive count
+                          if (archiveCount == 1) {
+                            // Single card - no scroll needed
+                            return VaultRitualCard(
+                              image: 'assets/img/card.png',
+                              title: 'Morning Meditation',
+                              subtitle: 'Start your day with positive energy and clarity',
+                            );
+                          } else {
+                            // Multiple cards - horizontal scroll
+                            return SizedBox(
+                              height: 100,
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: archiveCount,
+                                itemBuilder: (context, index) {
+                                  return Padding(
+                                    padding: EdgeInsets.only(
+                                      right: index < archiveCount - 1 ? 16.0 : 0,
+                                    ),
+                                    child: SizedBox(
+                                      width: MediaQuery.of(context).size.width - 32,
+                                      child: VaultRitualCard(
+                                        image: 'assets/img/card.png',
+                                        title: 'Morning Meditation',
+                                        subtitle: 'Start your day with positive energy and clarity',
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            );
+                          }
+                        } else {
+                          // Show no cards if no archive meditations
+                          return const SizedBox.shrink();
+                        }
+                      },
                     ),
                   ),
                 ),

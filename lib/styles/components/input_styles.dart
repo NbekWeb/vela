@@ -6,9 +6,9 @@ class InputStyles {
   static const Color translucentBackground = Color(0x1A152B56);
   static const Color borderColor = Color(0x1A152B56);
   static const Color textColor = BaseStyles.white;
-  static const Color labelColor = BaseStyles.white70;
-  static const Color prefixIconColor = BaseStyles.white70;
-  static const Color suffixIconColor = BaseStyles.white70;
+  static const Color labelColor = BaseStyles.cream;
+  static const Color prefixIconColor = BaseStyles.cream;
+  static const Color suffixIconColor = BaseStyles.cream;
 
   // Text Styles
   static const TextStyle inputTextStyle = TextStyle(

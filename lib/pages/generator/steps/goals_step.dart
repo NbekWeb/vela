@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import '../../../shared/models/meditation_profile_data.dart';
+import '../../../core/stores/meditation_store.dart';
 import '../step_scaffold.dart';
+import 'package:provider/provider.dart';
 
 class GoalsStep extends StatefulWidget {
+  final MeditationProfileData profileData;
+  final Function(MeditationProfileData) onProfileDataChanged;
   final VoidCallback onNext;
   final VoidCallback? onBack;
   final int currentStep;
@@ -9,6 +14,8 @@ class GoalsStep extends StatefulWidget {
   final int stepperIndex;
   final int stepperCount;
   const GoalsStep({
+    required this.profileData,
+    required this.onProfileDataChanged,
     required this.onNext,
     this.onBack,
     required this.currentStep,
@@ -26,15 +33,44 @@ class _GoalsStepState extends State<GoalsStep> {
   final TextEditingController _controller = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    // Avvalgi qiymatni ko‘rsatish uchun
+    if (widget.profileData.goals != null &&
+        widget.profileData.goals!.isNotEmpty) {
+      _controller.text = widget.profileData.goals!.join(', ');
+    }
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
 
+  void _onGoalsChanged(String value) {
+    // Maqsadlarni vergul orqali massivga aylantiramiz
+    final goals = value
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+    
+    // Update local profile data
+    final updatedProfile = widget.profileData.copyWith(goals: goals);
+    widget.onProfileDataChanged(updatedProfile);
+    
+                        // Save to store
+                    final meditationStore = Provider.of<MeditationStore>(context, listen: false);
+                    meditationStore.setMeditationProfile(updatedProfile);
+    
+    setState(() {}); // UI yangilash uchun
+  }
+
   @override
   Widget build(BuildContext context) {
     return StepScaffold(
-      title: 'Specific goals',
+      title: '',
       onBack: widget.onBack,
       onNext: widget.onNext,
       currentStep: widget.currentStep,
@@ -42,53 +78,80 @@ class _GoalsStepState extends State<GoalsStep> {
       nextEnabled: _controller.text.trim().isNotEmpty,
       stepperIndex: widget.stepperIndex,
       stepperCount: widget.stepperCount,
-      child: Column(
-        children: [
-          const Text(
-            'Are there specific goals you want to accomplish, experiences you want to have, or habits you want to form or change?',
-            style: TextStyle(
-              fontFamily: 'Satoshi',
-              fontWeight: FontWeight.w500,
-              fontSize: 18,
-              color: Color(0xFFF2EFEA),
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 30),
-          TextField(
-            controller: _controller,
-            minLines: 3,
-            maxLines: 6,
-            style: const TextStyle(
-              color: Colors.white,
-              fontFamily: 'Satoshi',
-              fontSize: 12,
-            ),
-            decoration: InputDecoration(
-              hintText: 'Start a morning routine, feel less anxious, travel more.',
-              hintStyle: const TextStyle(color: Color(0xFFB0B8C1)),
-              filled: true,
-              fillColor: Color(0x152B561A),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(
-                  color: Color(0x152B561A), // #152B56 10% opacity
-                  width: 1,
+      showTitles: true,
+      // Faqat content scroll bo‘ladi!
+      child: Expanded(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.only(bottom: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Text(
+                  'Specific goals',
+                  style: TextStyle(
+                    fontFamily: 'Canela',
+                    fontWeight: FontWeight.w300,
+                    fontSize: 36,
+                    color: Color(0xFFF2EFEA),
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(
-                  color: Color(0xFF152B56), // #152B56
-                  width: 1,
+                const SizedBox(height: 20),
+                const Text(
+                'Are there specific goals you want to accomplish, experiences you want to have, or habits you want to form or change?',
+                style: TextStyle(
+                  fontFamily: 'Satoshi',
+                  fontWeight: FontWeight.w500,
+                  fontSize: 18,
+                  decoration: TextDecoration.none,
+                  color: Color(0xFFF2EFEA),
                 ),
+                textAlign: TextAlign.center,
               ),
-              contentPadding: const EdgeInsets.all(16),
+              const SizedBox(height: 30),
+              SizedBox(
+                width: double.infinity,
+                child: TextField(
+                controller: _controller,
+                minLines: 3,
+                maxLines: 6,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Satoshi',
+                  fontSize: 12,
+                  decoration: TextDecoration.none,
+                ),
+                decoration: InputDecoration(
+                  hintText:
+                      'Start a morning routine, feel less anxious, travel more.',
+                  hintStyle: const TextStyle(color: Color(0xFFB0B8C1)),
+                  filled: true,
+                  fillColor: Color(0x152B561A),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: Color(0x152B561A), // #152B56 10% opacity
+                      width: 1,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF152B56), // #152B56
+                      width: 1,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.all(16),
+                ),
+                onChanged: _onGoalsChanged,
+              ),
             ),
-            onChanged: (_) => setState(() {}),
+            ],
           ),
-        ],
+        ),
+        ),
       ),
     );
   }
-} 
+}

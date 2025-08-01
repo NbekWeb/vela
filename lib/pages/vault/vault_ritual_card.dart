@@ -72,7 +72,7 @@ class VaultRitualCard extends StatelessWidget {
                 Text(
                   subtitle,
                   style: const TextStyle(
-                    color: Colors.white70,
+                    color: Color(0xFFF2EFEA),
                     fontSize: 15,
                   ),
                   maxLines: 2,

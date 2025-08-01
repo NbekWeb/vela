@@ -7,13 +7,26 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:vela/main.dart';
+import 'package:vela/core/stores/auth_store.dart';
+import 'package:vela/core/stores/meditation_store.dart';
+import 'package:vela/core/stores/like_store.dart';
+import 'package:vela/core/stores/check_in_store.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    final authStore = AuthStore();
+    final meditationStore = MeditationStore();
+    final likeStore = LikeStore();
+    final checkInStore = CheckInStore();
+    await tester.pumpWidget(MyApp(
+      authStore: authStore, 
+      meditationStore: meditationStore,
+      likeStore: likeStore,
+      checkInStore: checkInStore,
+      initialRoute: '/loading',
+    ));
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);

@@ -26,7 +26,7 @@ class Validators {
   
   static String? validateRequired(String? value, String fieldName) {
     if (value == null || value.trim().isEmpty) {
-      return '$fieldName to\'ldirilishi shart';
+      return '$fieldName is required';
     }
     
     return null;
@@ -34,12 +34,12 @@ class Validators {
   
   static String? validatePhone(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Telefon raqamini kiriting';
+      return 'Please enter your phone number';
     }
     
-    final phoneRegex = RegExp(r'^\+?[0-9]{10,12}$');
+    final phoneRegex = RegExp(r'^\+?[0-9]{10,12} $');
     if (!phoneRegex.hasMatch(value.replaceAll(RegExp(r'[\s\-\(\)]'), ''))) {
-      return 'To\'g\'ri telefon raqamini kiriting';
+      return 'Please enter a valid phone number';
     }
     
     return null;

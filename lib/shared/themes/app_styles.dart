@@ -4,14 +4,14 @@ class AppStyles {
   // Colors
   static const Color primaryBlue = Color(0xFF3B6EAA);
   static const Color white = Color(0xFFFFFFFF);
-  static const Color white70 = Color(0xB3FFFFFF);
+  static const Color white70 = Color(0xFFF2EFEA);
   static const Color cream = Color(0xFFF2EFEA);
   static const Color transparentWhite = Color(0x2EFFFFFF);
 
   // Text Styles
   static const TextStyle headingLarge = TextStyle(
     fontFamily: 'Canela',
-    fontSize: 40,
+    fontSize: 64,
     color: white,
     fontWeight: FontWeight.w400,
   );
@@ -34,7 +34,7 @@ class AppStyles {
 
   static const TextStyle bodyLarge = TextStyle(
     fontSize: 16,
-    color: white70,
+    color: cream,
     fontFamily: 'Satoshi',
     fontWeight: FontWeight.w700,
     height: 1.25,
@@ -46,6 +46,7 @@ class AppStyles {
     fontFamily: 'Satoshi',
     height: 1.25,
     decoration: TextDecoration.none,
+    fontWeight: FontWeight.w400,
   );
 
   static const TextStyle buttonText = TextStyle(
@@ -64,7 +65,7 @@ class AppStyles {
   );
 
   static const TextStyle linkText = TextStyle(
-    color: white70,
+    color: cream,
     fontFamily: 'Satoshi',
     fontWeight: FontWeight.w700,
   );

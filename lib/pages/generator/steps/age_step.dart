@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
+import '../../../shared/models/meditation_profile_data.dart';
+import '../../../core/stores/meditation_store.dart';
 import '../step_scaffold.dart';
+import 'package:provider/provider.dart';
 
 class AgeStep extends StatefulWidget {
+  final MeditationProfileData profileData;
+  final Function(MeditationProfileData) onProfileDataChanged;
   final VoidCallback onNext;
   final VoidCallback? onBack;
   final int currentStep;
   final int totalSteps;
   final int stepperIndex;
   final int stepperCount;
+
   const AgeStep({
+    required this.profileData,
+    required this.onProfileDataChanged,
     required this.onNext,
     this.onBack,
     required this.currentStep,
@@ -24,9 +32,16 @@ class AgeStep extends StatefulWidget {
 
 class _AgeStepState extends State<AgeStep> {
   int? selectedIndex;
-  final List<String> ages = [
-    '18-24', '25-34', '35-44', '45-54', '55+'
-  ];
+  final List<String> ages = ['18-24', '25-34', '35-44', '45-54', '55+'];
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize selectedIndex based on existing profile data
+    if (widget.profileData.ageRange != null) {
+      selectedIndex = ages.indexOf(widget.profileData.ageRange!);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +50,9 @@ class _AgeStepState extends State<AgeStep> {
     final horizontalPadding = 32.0; // StepScaffold yoki umumiy padding
     final pillSpacing = 15.0;
     final pillsPerRow = 3;
-    final pillWidth = (screenWidth - horizontalPadding - (pillSpacing * (pillsPerRow - 1))) / pillsPerRow;
+    final pillWidth =
+        (screenWidth - horizontalPadding - (pillSpacing * (pillsPerRow - 1))) /
+        pillsPerRow;
 
     return StepScaffold(
       title: 'How old are you?',
@@ -57,7 +74,17 @@ class _AgeStepState extends State<AgeStep> {
               return _AgePill(
                 label: ages[i],
                 selected: selected,
-                onTap: () => setState(() => selectedIndex = i),
+                onTap: () {
+                  setState(() => selectedIndex = i);
+                  
+                  // Update local profile data
+                  final updatedProfile = widget.profileData.copyWith(ageRange: ages[i]);
+                  widget.onProfileDataChanged(updatedProfile);
+                  
+                                      // Save to store
+                    final meditationStore = Provider.of<MeditationStore>(context, listen: false);
+                    meditationStore.setMeditationProfile(updatedProfile);
+                },
                 width: pillWidth,
               );
             }),
@@ -91,9 +118,13 @@ class _AgePill extends StatelessWidget {
         height: 48,
         padding: const EdgeInsets.symmetric(horizontal: 21, vertical: 12),
         decoration: BoxDecoration(
-          color: selected ? const Color(0x1A152B56) : Colors.transparent,
+          color: selected
+              ? const Color(0xFF3B6EAA)
+              : const Color.fromRGBO(21, 43, 86, 0.1),
           border: Border.all(
-            color: const Color(0x1A152B56),
+            color: selected
+                ? const Color(0xFF3B6EAA)
+                : const Color.fromRGBO(21, 43, 86, 0.2),
             width: 1,
           ),
           borderRadius: BorderRadius.circular(70),
@@ -114,4 +145,4 @@ class _AgePill extends StatelessWidget {
       ),
     );
   }
-} 
+}

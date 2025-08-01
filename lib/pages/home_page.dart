@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../core/services/auth_service.dart';
+import 'package:provider/provider.dart';
+import '../core/stores/auth_store.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -345,8 +346,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _handleLogout() async {
-    final authService = AuthService();
-    await authService.logout();
+    final authStore = context.read<AuthStore>();
+    await authStore.logout();
     
     if (mounted) {
       Navigator.pushReplacementNamed(context, '/login');

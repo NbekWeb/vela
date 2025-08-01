@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../vault/vault_ritual_card.dart';
 import '../../shared/widgets/stars_animation.dart';
+import '../../core/stores/meditation_store.dart';
+import '../generator/generator_page.dart';
 
 class MyMeditationsPage extends StatelessWidget {
   const MyMeditationsPage({super.key});
@@ -59,32 +62,34 @@ class MyMeditationsPage extends StatelessWidget {
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      children: const [
-                        VaultRitualCard(
-                          image: 'assets/img/card.png',
-                          title: 'Sleep Stream Meditation',
-                          subtitle: 'A deeply personalized journey crafted from your unique vision and dreams',
-                        ),
-                        SizedBox(height: 16),
-                        VaultRitualCard(
-                          image: 'assets/img/card.png',
-                          title: 'Dream Flow Meditation',
-                          subtitle: 'An intimately tailored experience shaped by your individual aspirations and fantasies.',
-                        ),
-                        SizedBox(height: 16),
-                        VaultRitualCard(
-                          image: 'assets/img/card.png',
-                          title: 'Creative Flow Art Therapy',
-                          subtitle: 'An expressive outlet that fosters creativity and self-discovery through various artistic mediums.',
-                        ),
-                        SizedBox(height: 16),
-                        VaultRitualCard(
-                          image: 'assets/img/card.png',
-                          title: 'Vision Stream Meditation',
-                          subtitle: 'A deeply personalized journey crafted around your unique desires and dreams.',
-                        ),
-                      ],
+                    child: Consumer<MeditationStore>(
+                      builder: (context, meditationStore, child) {
+                        final myMeditations = meditationStore.myMeditations;
+                        final meditationCount = myMeditations?.length ?? 0;
+                        
+                        if (meditationCount > 0) {
+                          // Show cards based on meditation count
+                          return Column(
+                            children: List.generate(meditationCount, (index) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 16.0),
+                                child: VaultRitualCard(
+                                  image: 'assets/img/card.png',
+                                  title: 'Sleep Stream',
+                                  subtitle: 'A deeply personalized journey crafted from your unique vision and dreams',
+                                ),
+                              );
+                            }),
+                          );
+                        } else {
+                          // Show default card if no meditations
+                          return const VaultRitualCard(
+                            image: 'assets/img/card.png',
+                            title: 'Sleep Stream',
+                            subtitle: 'A deeply personalized journey crafted from your unique vision and dreams',
+                          );
+                        }
+                      },
                     ),
                   ),
                 ),
@@ -92,8 +97,15 @@ class MyMeditationsPage extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   child: SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {},
+                                          child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const GeneratorPage(),
+                            ),
+                          );
+                        },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF3B6EAA),
                         shape: RoundedRectangleBorder(

@@ -1,23 +1,29 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import '../../shared/models/meditation_profile_data.dart';
 
 class SleepMeditationAudioPlayer extends StatelessWidget {
   final bool isPlaying;
   final VoidCallback onPlayPausePressed;
+  final MeditationProfileData? profileData; // Change to MeditationProfileData
 
   const SleepMeditationAudioPlayer({
     super.key,
     required this.isPlaying,
     required this.onPlayPausePressed,
+    this.profileData, // Change to MeditationProfileData
   });
 
   @override
   Widget build(BuildContext context) {
+    // Get duration from MeditationProfileData ritual
+    final duration = profileData?.ritual?['duration'] ?? '5'; // Get duration from ritual object
+    
     return Column(
       children: [
         const SizedBox(height: 16),
         const Text(
-          'Sleep Stream Meditation',
+          'Sleep Stream ',
           style: TextStyle(
             fontFamily: 'Canela',
             fontSize: 32,
@@ -36,9 +42,9 @@ class SleepMeditationAudioPlayer extends StatelessWidget {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 16),
-        const Text(
-          'This 5 min meditation weaves together your personal aspirations, gratitude, and authentic self with dreamy guidance to help manifest your dream life.',
-          style: TextStyle(
+        Text(
+          'This $duration min meditation weaves together your personal aspirations, gratitude, and authentic self with dreamy guidance to help manifest your dream life.',
+          style: const TextStyle(
             fontFamily: 'Satoshi-Regular',
             fontSize: 16,
             color: Colors.white,

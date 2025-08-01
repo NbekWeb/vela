@@ -5,7 +5,7 @@ class ButtonStyles {
   // Primary Button
   static ButtonStyle primary = ElevatedButton.styleFrom(
     backgroundColor: BaseStyles.primaryBlue,
-    minimumSize: const Size.fromHeight(56),
+    minimumSize: const Size.fromHeight(60),
     shape: RoundedRectangleBorder(
       borderRadius: BaseStyles.radiusLarge,
     ),
@@ -24,7 +24,7 @@ class ButtonStyles {
 
   // Text Button
   static ButtonStyle text = TextButton.styleFrom(
-    foregroundColor: BaseStyles.white70,
+    foregroundColor: BaseStyles.cream,
     textStyle: const TextStyle(
       fontFamily: 'Satoshi',
       fontWeight: FontWeight.w700,

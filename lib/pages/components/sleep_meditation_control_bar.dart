@@ -40,7 +40,7 @@ class SleepMeditationControlBar extends StatelessWidget {
                 height: 60,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.10),
+                  color: Colors.white.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(60),
                 ),
                 child: Row(
@@ -50,7 +50,7 @@ class SleepMeditationControlBar extends StatelessWidget {
                       isLiked ? Icons.favorite : Icons.favorite_border,
                       color: Colors.white,
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     const Text(
                       'Resonating?',
                       style: TextStyle(

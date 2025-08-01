@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../vault/vault_ritual_card.dart';
 import 'package:video_player/video_player.dart';
 import '../../shared/widgets/custom_star.dart';
 import '../dashboard/my_meditations_page.dart';
-import '../dashboard/archive_page.dart'; // <-- add this import
+import '../dashboard/archive_page.dart';
+import '../generator/generator_page.dart';
+import '../../core/stores/auth_store.dart';
+import '../../core/stores/meditation_store.dart';
 
 class DashboardHomePage extends StatefulWidget {
   const DashboardHomePage({super.key});
@@ -21,6 +25,8 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
   void initState() {
     super.initState();
     _initializeVideoController();
+    _getUserDetails();
+    _loadMeditationData();
   }
 
   Future<void> _initializeVideoController() async {
@@ -41,7 +47,6 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
           ..play();
       }
     } catch (e) {
-      debugPrint('Video controller initialization error: $e');
       if (mounted) {
         setState(() {
           _isInitialized = false;
@@ -55,6 +60,26 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
   void dispose() {
     _controller?.dispose();
     super.dispose();
+  }
+
+  Future<void> _getUserDetails() async {
+    // Use Provider to access AuthStore
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authStore = Provider.of<AuthStore>(context, listen: false);
+      authStore.getUserDetails();
+    });
+  }
+
+  Future<void> _loadMeditationData() async {
+    // Use Provider to access MeditationStore
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final meditationStore = Provider.of<MeditationStore>(
+        context,
+        listen: false,
+      );
+      meditationStore.fetchMyMeditations();
+      meditationStore.restoreMeditation();
+    });
   }
 
   @override
@@ -114,13 +139,37 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
                       ),
                       Image.asset('assets/img/logo.png', width: 60, height: 39),
                       // Avatar on the right, size 30x30
-                      ClipOval(
-                        child: Image.asset(
-                          'assets/img/card.png', // Placeholder, replace with your avatar asset if needed
-                          width: 30,
-                          height: 30,
-                          fit: BoxFit.cover,
-                        ),
+                      Consumer<AuthStore>(
+                        builder: (context, authStore, child) {
+                          final user = authStore.user;
+                          final avatarUrl = user?.avatar;
+
+                          if (avatarUrl != null && avatarUrl.isNotEmpty) {
+                            return Container(
+                              width: 30,
+                              height: 30,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(15),
+                                image: DecorationImage(
+                                  image: NetworkImage(avatarUrl),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            );
+                          } else {
+                            return Container(
+                              width: 30,
+                              height: 30,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(15),
+                                image: const DecorationImage(
+                                  image: AssetImage('assets/img/card.png'),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            );
+                          }
+                        },
                       ),
                     ],
                   ),
@@ -146,24 +195,54 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          Center(
-                            child: Text(
-                              'You\'ve shown up 3 days in a row',
-                              style: TextStyle(
-                                color: const Color(0xFFDCE6F0),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
+                          Consumer<AuthStore>(
+                            builder: (context, authStore, child) {
+                              final user = authStore.user;
+                              final weeklyStats = user?.weeklyLoginStats;
+                              final totalLogins =
+                                  weeklyStats?.totalLoginsThisWeek ?? 0;
+
+                              String streakText;
+                              if (totalLogins == 0) {
+                                streakText =
+                                    'Start your meditation journey today';
+                              } else if (totalLogins == 1) {
+                                streakText = 'You\'ve shown up 1 day this week';
+                              } else {
+                                streakText =
+                                    'You\'ve shown up $totalLogins days this week';
+                              }
+
+                              return Center(
+                                child: Text(
+                                  streakText,
+                                  style: const TextStyle(
+                                    color: Color(0xFFDCE6F0),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                           const SizedBox(height: 16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: List.generate(
-                              7,
-                              (index) => CustomStar(
-                                isFilled: index < 3,
-                                title: [
+                          Consumer<AuthStore>(
+                            builder: (context, authStore, child) {
+                              final user = authStore.user;
+                              final weeklyStats = user?.weeklyLoginStats;
+
+                              if (weeklyStats != null) {
+                                final days = weeklyStats.days;
+                                final dayTitles = [
+                                  'Monday',
+                                  'Tuesday',
+                                  'Wednesday',
+                                  'Thursday',
+                                  'Friday',
+                                  'Saturday',
+                                  'Sunday',
+                                ];
+                                final dayLabels = [
                                   'M',
                                   'T',
                                   'W',
@@ -171,10 +250,48 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
                                   'F',
                                   'S',
                                   'S',
-                                ][index],
-                                size: 36,
-                              ),
-                            ),
+                                ];
+
+                                return Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: List.generate(7, (index) {
+                                    final dayTitle = dayTitles[index];
+                                    final dayStats = days[dayTitle];
+                                    final isFilled =
+                                        dayStats?.loggedIn ?? false;
+
+                                    return CustomStar(
+                                      isFilled: isFilled,
+                                      title: dayLabels[index],
+                                      size: 36,
+                                    );
+                                  }),
+                                );
+                              } else {
+                                // Fallback if no weekly stats
+                                return Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: List.generate(
+                                    7,
+                                    (index) => CustomStar(
+                                      isFilled: false,
+                                      title: [
+                                        'M',
+                                        'T',
+                                        'W',
+                                        'T',
+                                        'F',
+                                        'S',
+                                        'S',
+                                      ][index],
+                                      size: 36,
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
                           ),
                           const SizedBox(height: 20),
                           Row(
@@ -207,17 +324,83 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
                             ],
                           ),
                           const SizedBox(height: 16),
-                          VaultRitualCard(
-                            image: 'assets/img/card.png',
-                            title: 'Sleep Stream Meditation',
-                            subtitle:
-                                'A deeply personalized journey crafted from your unique vision and dreams',
+                          Consumer<MeditationStore>(
+                            builder: (context, meditationStore, child) {
+                              final myMeditations =
+                                  meditationStore.myMeditations;
+
+                              if (myMeditations != null &&
+                                  myMeditations.isNotEmpty) {
+                                // Show meditations based on count
+                                final meditationCount = myMeditations.length;
+                                
+                                if (meditationCount == 1) {
+                                  // Single card - no scroll needed
+                                  return VaultRitualCard(
+                                    image:
+                                        myMeditations.first['image'] ??
+                                        'assets/img/card.png',
+                                    title:
+                                        myMeditations.first['title'] ??
+                                        'Sleep Stream',
+                                    subtitle:
+                                        myMeditations.first['description'] ??
+                                        'A deeply personalized journey crafted from your unique vision and dreams',
+                                  );
+                                } else {
+                                  // Multiple cards - horizontal scroll
+                                  return SizedBox(
+                                    height: 100,
+                                    child: ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: meditationCount,
+                                      itemBuilder: (context, index) {
+                                        final meditation = myMeditations[index];
+                                        return Padding(
+                                          padding: EdgeInsets.only(
+                                            right: index < meditationCount - 1 ? 12.0 : 0,
+                                          ),
+                                          child: SizedBox(
+                                            width: MediaQuery.of(context).size.width - 32,
+                                            child: VaultRitualCard(
+                                              image:
+                                                  meditation['image'] ??
+                                                  'assets/img/card.png',
+                                              title:
+                                                  meditation['title'] ??
+                                                  'Sleep Stream',
+                                              subtitle:
+                                                  meditation['description'] ??
+                                                  'A deeply personalized journey crafted from your unique vision and dreams',
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  );
+                                }
+                              } else {
+                                return VaultRitualCard(
+                                  image: 'assets/img/card.png',
+                                  title: 'Sleep Stream',
+                                  subtitle:
+                                      'A deeply personalized journey crafted from your unique vision and dreams',
+                                );
+                              }
+                            },
                           ),
                           const SizedBox(height: 24),
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const GeneratorPage(),
+                                  ),
+                                );
+                              },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Color(0xFF3B6EAA),
                                 shape: RoundedRectangleBorder(
@@ -283,19 +466,38 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
                             ],
                           ),
                           const SizedBox(height: 16),
-                          VaultRitualCard(
-                            image: 'assets/img/card.png',
-                            title: 'Morning Meditation',
-                            subtitle:
-                                'Start your day with positive energy and clarity',
+                          Consumer<MeditationStore>(
+                            builder: (context, meditationStore, child) {
+                              final archiveMeditation =
+                                  meditationStore.archiveMeditation;
+
+                              if (archiveMeditation != null &&
+                                  archiveMeditation.isNotEmpty) {
+                                // If archiveMeditation has items, show cards based on count
+                                return Column(
+                                  children: List.generate(
+                                    archiveMeditation.length,
+                                    (index) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 16.0,
+                                        ),
+                                        child: VaultRitualCard(
+                                          image: 'assets/img/card.png',
+                                          title: 'Morning Meditation',
+                                          subtitle:
+                                              'Start your day with positive energy and clarity',
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                );
+                              } else {
+                                // If no archiveMeditation, show no cards
+                                return const SizedBox.shrink();
+                              }
+                            },
                           ),
-                          const SizedBox(height: 16),
-                          VaultRitualCard(
-                            image: 'assets/img/card.png',
-                            title: 'Evening Reflection',
-                            subtitle: 'Wind down and reflect on your day',
-                          ),
-                          const SizedBox(height: 32),
                         ],
                       ),
                     ),

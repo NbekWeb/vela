@@ -9,11 +9,11 @@ class StarsAnimation extends StatelessWidget {
   final int starCount;
 
   const StarsAnimation({
-    Key? key,
+    super.key,
     this.topColor = const Color(0xFF3C6EAB),
     this.bottomColor = const Color(0xFFA4C6EB),
     this.starCount = 55,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
