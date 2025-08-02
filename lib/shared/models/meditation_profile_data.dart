@@ -11,9 +11,10 @@ class MeditationProfileData {
   List<String>? tone;
   List<String>? voice;
   List<String>? duration;
-  String? fileUrl;
+  String? file;
   int? planType;
   Map<String, dynamic>? ritual; // Add ritual field
+  Map<String, dynamic>? details; // Add details field
 
   MeditationProfileData({
     this.id,
@@ -28,9 +29,10 @@ class MeditationProfileData {
     this.tone,
     this.voice,
     this.duration,
-    this.fileUrl,
+    this.file,
     this.planType,
     this.ritual, // Add ritual field
+    this.details, // Add details field
   });
 
   MeditationProfileData copyWith({
@@ -46,9 +48,10 @@ class MeditationProfileData {
     List<String>? tone,
     List<String>? voice,
     List<String>? duration,
-    String? fileUrl,
+    String? file,
     int? planType,
     Map<String, dynamic>? ritual, // Add ritual field
+    Map<String, dynamic>? details, // Add details field
   }) {
     return MeditationProfileData(
       id: id ?? this.id,
@@ -63,9 +66,10 @@ class MeditationProfileData {
       tone: tone ?? this.tone,
       voice: voice ?? this.voice,
       duration: duration ?? this.duration,
-      fileUrl: fileUrl ?? this.fileUrl,
+      file: file ?? this.file,
       planType: planType ?? this.planType,
       ritual: ritual ?? this.ritual, // Add ritual field
+      details: details ?? this.details, // Add details field
     );
   }
 
@@ -99,9 +103,10 @@ class MeditationProfileData {
               ? List<String>.from(json['duration']) 
               : [json['duration'].toString()])
           : null,
-      fileUrl: json['file_url'],
+      file: json['file'],
       planType: json['plan_type'],
       ritual: json['ritual'], // Add ritual field
+      details: json['details'], // Add details field
     );
   }
 
@@ -119,9 +124,10 @@ class MeditationProfileData {
       'tone': tone,
       'voice': voice,
       'duration': duration,
-      'file_url': fileUrl,
+      'file': file,
       'plan_type': planType,
       'ritual': ritual, // Add ritual field
+      'details': details, // Add details field
     };
   }
 } 

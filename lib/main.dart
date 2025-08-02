@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'core/constants/app_constants.dart';
 import 'shared/themes/app_theme.dart';
 import 'core/stores/auth_store.dart';
@@ -13,14 +14,24 @@ import 'pages/auth/login_page.dart';
 import 'pages/auth/register_page.dart';
 import 'pages/dashboard/main.dart';
 import 'pages/auth/starter_page.dart';
+import 'pages/auth/onboarding_page_1.dart';
+import 'pages/auth/onboarding_page_2.dart';
+import 'pages/auth/onboarding_page_3.dart';
 import 'pages/plan_page.dart';
 import 'pages/generator/generator_page.dart';
 import 'pages/vault_page.dart';
 import 'pages/dashboard/my_meditations_page.dart';
 import 'pages/dashboard/archive_page.dart';
+import 'pages/dashboard/main.dart';
 
 // Global navigator key for API service
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+// Global variable to store meditation ID for audio player
+String? globalMeditationId;
+
+// Global secure storage instance
+final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,10 +45,11 @@ void main() async {
   await authStore.initialize();
   await meditationStore.initialize();
   
-  // Check if user is authenticated and set initial route
+  // Check if user is authenticated using the store method
   String initialRoute = '/loading';
-  if (authStore.isAuthenticated) {
-    initialRoute = '/dashboard';
+  final isAuthenticated = await authStore.isAuthenticated();
+  if (isAuthenticated) {
+    initialRoute = '/dashboard'; // Still go to loading screen to check authentication
   }
   
   runApp(MyApp(
@@ -92,13 +104,22 @@ class MyApp extends StatelessWidget {
           routes: {
             '/loading': (context) => const LoadingScreen(),
             '/starter': (context) => const StarterPage(),
+            '/onboarding-1': (context) => const OnboardingPage1(),
+            '/onboarding-2': (context) => const OnboardingPage2(),
+            '/onboarding-3': (context) => const OnboardingPage3(),
             '/login': (context) => const LoginPage(),
             '/register': (context) => const RegisterPage(),
             '/plan': (context) => const PlanPage(),
             '/generator': (context) => const GeneratorPage(),
             '/vault': (context) => const VaultPage(),
             '/dashboard': (context) => const DashboardMainPage(),
-            '/my-meditations': (context) => const MyMeditationsPage(),
+
+            '/my-meditations': (context) => MyMeditationsPage(
+              onAudioPlay: (meditationId) {
+                globalMeditationId = meditationId;
+                Navigator.pushReplacementNamed(context, '/dashboard');
+              },
+            ),
             '/archive': (context) => const ArchivePage(),
           },
         ),

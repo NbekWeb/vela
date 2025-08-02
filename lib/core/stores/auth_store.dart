@@ -24,7 +24,16 @@ class AuthStore extends ChangeNotifier {
   String? get error => _error;
   String? get accessToken => _accessToken;
   String? get refreshToken => _refreshToken;
-  bool get isAuthenticated => _user != null && _accessToken != null;
+  
+  // Check authentication status directly from storage
+  Future<bool> isAuthenticated() async {
+    try {
+      final token = await _secureStorage.read(key: 'access_token');
+      return token != null && token.isNotEmpty;
+    } catch (e) {
+      return false;
+    }
+  }
 
   // Actions (Pinia actions ga o'xshash)
   void setLoading(bool loading) {
@@ -56,9 +65,11 @@ class AuthStore extends ChangeNotifier {
       // Initialize ApiService
       ApiService.init();
 
-      final token = await _secureStorage.read(key: 'access_token');
-      if (token != null) {
-        _accessToken = token;
+      // Check if user is authenticated and get user details if needed
+      final isAuth = await isAuthenticated();
+      if (isAuth) {
+        // Load token to memory for API calls
+        _accessToken = await _secureStorage.read(key: 'access_token');
         await getUserDetails();
       }
     } catch (e) {}

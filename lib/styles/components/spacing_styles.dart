@@ -31,8 +31,8 @@ class SpacingStyles {
     vertical: 16.0,
   );
 
-  static const EdgeInsets starterPageContentPadding = EdgeInsets.symmetric(
-    horizontal: 32.0,
+  static const EdgeInsets starterPageContentPadding = EdgeInsets.fromLTRB(
+    20, 20, 20, 20
   );
 
   // Modal Specific Spacing

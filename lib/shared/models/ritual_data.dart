@@ -148,7 +148,7 @@ class RitualDataProvider {
         end: Alignment.centerRight,
       ),
       defaultSettings: {
-        'ritualType': ['guided_meditations'],
+        'ritualType': ['guided'],
         'tone': ['dreamy'],
         'voice': ['male'],
         'duration': ['5'],
@@ -168,7 +168,7 @@ class RitualDataProvider {
         end: Alignment.centerRight,
       ),
       defaultSettings: {
-        'ritualType': ['guided_meditations'],
+        'ritualType': ['guided'],
         'tone': ['asmr'],
         'voice': ['female'],
         'duration': ['10'],
@@ -208,7 +208,7 @@ class RitualDataProvider {
         end: Alignment.centerRight,
       ),
       defaultSettings: {
-        'ritualType': ['guided_meditations'],
+        'ritualType': ['guided'],
         'tone': ['asmr'],
         'voice': ['male'],
         'duration': ['5'],

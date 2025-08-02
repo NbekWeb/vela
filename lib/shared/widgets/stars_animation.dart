@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
-class StarsAnimation extends StatelessWidget {
+class StarsAnimation extends StatefulWidget {
   final Color topColor;
   final Color bottomColor;
   final int starCount;
@@ -16,18 +16,56 @@ class StarsAnimation extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final random = Random();
-    final List<Widget> stars = List.generate(starCount, (index) {
-      final top = random.nextDouble() * 100;
-      final left = random.nextDouble() * 100;
-      final delay = random.nextDouble() * 2;
-      return Positioned(
-        top: top * MediaQuery.of(context).size.height / 100,
-        left: left * MediaQuery.of(context).size.width / 100,
-        child: TwinklingStar(delay: delay),
-      );
+  State<StarsAnimation> createState() => _StarsAnimationState();
+}
+
+class _StarsAnimationState extends State<StarsAnimation> {
+  List<Widget> stars = [];
+  late Size screenSize;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeStars();
     });
+  }
+
+  void _initializeStars() {
+    if (!mounted) return;
+    
+    final random = Random();
+    screenSize = MediaQuery.of(context).size;
+    
+    setState(() {
+      stars = List.generate(widget.starCount, (index) {
+        final top = random.nextDouble() * 100;
+        final left = random.nextDouble() * 100;
+        final delay = random.nextDouble() * 2;
+        return Positioned(
+          top: top * screenSize.height / 100,
+          left: left * screenSize.width / 100,
+          child: TwinklingStar(delay: delay),
+        );
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (stars.isEmpty) {
+      return SizedBox.expand(
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [widget.topColor, widget.bottomColor],
+            ),
+          ),
+        ),
+      );
+    }
 
     return SizedBox.expand(
       child: Stack(
@@ -38,7 +76,7 @@ class StarsAnimation extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [topColor, bottomColor],
+                colors: [widget.topColor, widget.bottomColor],
               ),
             ),
           ),

@@ -16,10 +16,11 @@ class BaseStyles {
   // Typography
   static const TextStyle headingLarge = TextStyle(
     fontFamily: 'Canela',
-    fontSize: 40,
+    fontSize: 64,
     color: white,
-    fontWeight: FontWeight.w400,
+    fontWeight: FontWeight.w300,
     decoration: TextDecoration.none,
+    height: 1.05,
   );
 
   static const TextStyle headingMedium = TextStyle(
@@ -40,7 +41,7 @@ class BaseStyles {
   );
 
   static const TextStyle bodyLarge = TextStyle(
-    fontSize: 16,
+    fontSize: 18,
     color: white70,
     fontFamily: 'Satoshi',
     fontWeight: FontWeight.w600,

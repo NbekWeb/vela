@@ -27,7 +27,7 @@ class _VaultPageState extends State<VaultPage> {
         listen: false,
       );
       meditationStore.fetchMyMeditations();
-      meditationStore.restoreMeditation();
+      meditationStore.fetchMeditationLibrary(); // Changed from restoreMeditation to fetchMeditationLibrary
     });
   }
 
@@ -97,7 +97,7 @@ class _VaultPageState extends State<VaultPage> {
                             fontFamily: 'Canela',
                             fontSize: 28,
                             color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w300,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -112,7 +112,7 @@ class _VaultPageState extends State<VaultPage> {
                         ),
                         const SizedBox(height: 24),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 0),
                           child: Consumer<MeditationStore>(
                             builder: (context, meditationStore, child) {
                               final myMeditations = meditationStore.myMeditations;
@@ -161,13 +161,20 @@ class _VaultPageState extends State<VaultPage> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(
-                                    'Your Saved Rituals (${meditationStore.myMeditations?.length ?? 0})',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 32,
-                                      fontWeight: FontWeight.w300,
-                                      fontFamily: 'Canela',
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.of(
+                                        context,
+                                      ).pushNamed('/my-meditations');
+                                    },
+                                    child: Text(
+                                      'Your Saved Rituals (${meditationStore.myMeditations?.length ?? 0})',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 32,
+                                        fontWeight: FontWeight.w300,
+                                        fontFamily: 'Canela',
+                                      ),
                                     ),
                                   ),
                                   GestureDetector(
@@ -190,21 +197,39 @@ class _VaultPageState extends State<VaultPage> {
                         Consumer<MeditationStore>(
                           builder: (context, meditationStore, child) {
                             final myMeditations = meditationStore.myMeditations;
-                            if (myMeditations == null ||
-                                myMeditations.isEmpty) {
+                            
+                            // Show loader while data is being fetched
+                            if (myMeditations == null) {
+                              return const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 16),
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              );
+                            }
+                            
+                            if (myMeditations.isEmpty) {
                               return const SizedBox.shrink();
                             }
 
                             final meditationCount = myMeditations.length;
                             
                             if (meditationCount == 1) {
+                              final meditation = myMeditations.first;
+                              final details = meditation['details'];
+                              final name = details?['name'] ?? 'Sleep Stream';
+                              final meditationId = meditation['id']?.toString();
+                              final file = details?['file']?.toString();
+                              
                               return Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 16),
                                 child: VaultRitualCard(
-                                  image: 'assets/img/card.png',
-                                  title: 'Sleep Stream ',
-                                  subtitle:
-                                      'A deeply personalized journey crafted from your unique vision and dreams',
+                                  name: name,
+                                  meditationId: meditationId,
+                                  file: file,
                                 ),
                               );
                             } else {
@@ -215,6 +240,12 @@ class _VaultPageState extends State<VaultPage> {
                                   padding: const EdgeInsets.symmetric(horizontal: 16),
                                   itemCount: meditationCount,
                                   itemBuilder: (context, index) {
+                                    final meditation = myMeditations[index];
+                                    final details = meditation['details'];
+                                    final name = details?['name'] ?? 'Sleep Stream';
+                                    final meditationId = meditation['id']?.toString();
+                                    final file = details?['file']?.toString();
+                                    
                                     return Padding(
                                       padding: EdgeInsets.only(
                                         right: index < meditationCount - 1 ? 12.0 : 0,
@@ -222,10 +253,9 @@ class _VaultPageState extends State<VaultPage> {
                                       child: SizedBox(
                                         width: MediaQuery.of(context).size.width - 32,
                                         child: VaultRitualCard(
-                                          image: 'assets/img/card.png',
-                                          title: 'Sleep Stream ',
-                                          subtitle:
-                                              'A deeply personalized journey crafted from your unique vision and dreams',
+                                          name: name,
+                                          meditationId: meditationId,
+                                          file: file,
                                         ),
                                       ),
                                     );
@@ -244,13 +274,20 @@ class _VaultPageState extends State<VaultPage> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(
-                                    'The Archive (${meditationStore.archiveMeditation?.length ?? 0})',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 32,
-                                      fontWeight: FontWeight.w300,
-                                      fontFamily: 'Canela',
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.of(
+                                        context,
+                                      ).pushNamed('/archive');
+                                    },
+                                    child: Text(
+                                      'The Archive (${meditationStore.libraryDatas?.length ?? 0})',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 32,
+                                        fontWeight: FontWeight.w300,
+                                        fontFamily: 'Canela',
+                                      ),
                                     ),
                                   ),
                                   GestureDetector(
@@ -272,21 +309,41 @@ class _VaultPageState extends State<VaultPage> {
                         const SizedBox(height: 12),
                         Consumer<MeditationStore>(
                           builder: (context, meditationStore, child) {
-                            final archiveMeditation =
-                                meditationStore.archiveMeditation;
-                            if (archiveMeditation == null) {
-                              return const SizedBox.shrink();
+                            final libraryDatas = meditationStore.libraryDatas;
+                            
+                            // Show loader while data is being fetched
+                            if (libraryDatas == null) {
+                              return const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 16),
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              );
                             }
 
-                            final archiveCount = archiveMeditation.length;
+                            final libraryCount = libraryDatas.length;
                             
-                            if (archiveCount == 1) {
+                            if (libraryCount == 1) {
+                              final meditation = libraryDatas.first;
+                              final name = meditation['name'] ?? 'Archive Meditation';
+                              final meditationId = meditation['id']?.toString();
+                              final file = meditation['file']?.toString();
+                              final title = meditation['name']?.toString();
+                              final description = meditation['description']?.toString();
+                              final imageUrl = meditation['image']?.toString();
+                              
                               return Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 16),
                                 child: VaultRitualCard(
-                                  image: 'assets/img/card.png',
-                                  title: 'Archive Meditation',
-                                  subtitle: 'An archived meditation experience',
+                                  name: name,
+                                  meditationId: meditationId,
+                                  file: file,
+                                  title: title,
+                                  description: description,
+                                  imageUrl: imageUrl,
                                 ),
                               );
                             } else {
@@ -295,18 +352,29 @@ class _VaultPageState extends State<VaultPage> {
                                 child: ListView.builder(
                                   scrollDirection: Axis.horizontal,
                                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                                  itemCount: archiveCount,
+                                  itemCount: libraryCount,
                                   itemBuilder: (context, index) {
+                                    final meditation = libraryDatas[index];
+                                    final name = meditation['name'] ?? 'Archive Meditation';
+                                    final meditationId = meditation['id']?.toString();
+                                    final file = meditation['file']?.toString();
+                                    final title = meditation['name']?.toString();
+                                    final description = meditation['description']?.toString();
+                                    final imageUrl = meditation['image']?.toString();
+                                    
                                     return Padding(
                                       padding: EdgeInsets.only(
-                                        right: index < archiveCount - 1 ? 12.0 : 0,
+                                        right: index < libraryCount - 1 ? 12.0 : 0,
                                       ),
                                       child: SizedBox(
                                         width: MediaQuery.of(context).size.width - 32,
                                         child: VaultRitualCard(
-                                          image: 'assets/img/card.png',
-                                          title: 'Archive Meditation',
-                                          subtitle: 'An archived meditation experience',
+                                          name: name,
+                                          meditationId: meditationId,
+                                          file: file,
+                                          title: title,
+                                          description: description,
+                                          imageUrl: imageUrl,
                                         ),
                                       ),
                                     );

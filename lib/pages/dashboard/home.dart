@@ -6,8 +6,10 @@ import '../../shared/widgets/custom_star.dart';
 import '../dashboard/my_meditations_page.dart';
 import '../dashboard/archive_page.dart';
 import '../generator/generator_page.dart';
+import '../sleep_stream_meditation_page.dart';
 import '../../core/stores/auth_store.dart';
 import '../../core/stores/meditation_store.dart';
+import '../dashboard/components/dashboard_audio_player.dart';
 
 class DashboardHomePage extends StatefulWidget {
   const DashboardHomePage({super.key});
@@ -78,111 +80,128 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
         listen: false,
       );
       meditationStore.fetchMyMeditations();
-      meditationStore.restoreMeditation();
+      meditationStore.fetchMeditationLibrary();
     });
+  }
+
+  void _onAudioPlay(
+    String meditationId, {
+    String? title,
+    String? description,
+    String? imageUrl,
+  }) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DashboardAudioPlayer(
+          meditationId: meditationId,
+          title: title,
+          description: description,
+          imageUrl: imageUrl,
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFB3D8F7),
-      body: Stack(
+      backgroundColor: const Color(0xFF5398DA),
+      body: Column(
         children: [
-          // Video background or fallback
-          if (_isInitialized && _controller != null && !_hasError)
-            SizedBox.expand(
-              child: FittedBox(
-                fit: BoxFit.cover,
-                child: SizedBox(
-                  width: _controller!.value.size.width,
-                  height: _controller!.value.size.height,
-                  child: VideoPlayer(_controller!),
-                ),
-              ),
-            )
-          else
-            // Fallback background
-            Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Color(0xFFB3D8F7),
-                    Color(0xFF8BC6F7),
-                    Color(0xFF5AA9F7),
-                  ],
-                ),
-              ),
-            ),
-          SafeArea(
-            child: Column(
-              children: [
-                // Fixed header
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16.0, 4, 16.0, 0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Info icon in a circle, size 24x24
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: const BoxDecoration(shape: BoxShape.circle),
-                        child: const Center(
-                          child: Icon(
-                            Icons.info_outline,
-                            color: Colors.white,
-                            size: 24,
+          // Video background that covers entire screen including status bar
+          Expanded(
+            child: SingleChildScrollView(
+              child: Stack(
+                children: [
+                  // Video background that scrolls with content - starts from top
+                  Container(
+                    height: MediaQuery.of(context).size.height,
+                    width: double.infinity,
+                    child: _isInitialized && _controller != null && !_hasError
+                        ? FittedBox(
+                            fit: BoxFit.cover,
+                            child: SizedBox(
+                              width: _controller!.value.size.width,
+                              height: _controller!.value.size.height,
+                              child: VideoPlayer(_controller!),
+                            ),
+                          )
+                        : Container(
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Color(0xFFB3D8F7),
+                                  Color(0xFF8BC6F7),
+                                  Color(0xFF5AA9F7),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                      Image.asset('assets/img/logo.png', width: 60, height: 39),
-                      // Avatar on the right, size 30x30
-                      Consumer<AuthStore>(
-                        builder: (context, authStore, child) {
-                          final user = authStore.user;
-                          final avatarUrl = user?.avatar;
-
-                          if (avatarUrl != null && avatarUrl.isNotEmpty) {
-                            return Container(
-                              width: 30,
-                              height: 30,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(15),
-                                image: DecorationImage(
-                                  image: NetworkImage(avatarUrl),
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            );
-                          } else {
-                            return Container(
-                              width: 30,
-                              height: 30,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(15),
-                                image: const DecorationImage(
-                                  image: AssetImage('assets/img/card.png'),
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                      ),
-                    ],
                   ),
-                ),
-                // Scrollable content
-                Expanded(
-                  child: SingleChildScrollView(
+                  // Content overlay with SafeArea
+                  SafeArea(
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 240),
+                          // Header
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              // Info icon in a circle, size 24x24
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: const BoxDecoration(shape: BoxShape.circle),
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.info_outline,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
+                                ),
+                              ),
+                              Image.asset('assets/img/logo.png', width: 60, height: 39),
+                              // Avatar on the right, size 30x30
+                              Consumer<AuthStore>(
+                                builder: (context, authStore, child) {
+                                  final user = authStore.user;
+                                  final avatarUrl = user?.avatar;
+
+                                  if (avatarUrl != null && avatarUrl.isNotEmpty) {
+                                    return Container(
+                                      width: 30,
+                                      height: 30,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(15),
+                                        image: DecorationImage(
+                                          image: NetworkImage(avatarUrl),
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    return Container(
+                                      width: 30,
+                                      height: 30,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(15),
+                                        image: const DecorationImage(
+                                          image: AssetImage('assets/img/card.png'),
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 300),
                           Center(
                             child: Text(
                               'Daily Streaks',
@@ -199,8 +218,13 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
                             builder: (context, authStore, child) {
                               final user = authStore.user;
                               final weeklyStats = user?.weeklyLoginStats;
-                              final totalLogins =
-                                  weeklyStats?.totalLoginsThisWeek ?? 0;
+                              
+                              int totalLogins = 0;
+                              if (weeklyStats != null && weeklyStats.days.isNotEmpty) {
+                                totalLogins = weeklyStats.days
+                                    .where((day) => day.login)
+                                    .length;
+                              }
 
                               String streakText;
                               if (totalLogins == 0) {
@@ -231,17 +255,7 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
                               final user = authStore.user;
                               final weeklyStats = user?.weeklyLoginStats;
 
-                              if (weeklyStats != null) {
-                                final days = weeklyStats.days;
-                                final dayTitles = [
-                                  'Monday',
-                                  'Tuesday',
-                                  'Wednesday',
-                                  'Thursday',
-                                  'Friday',
-                                  'Saturday',
-                                  'Sunday',
-                                ];
+                              if (weeklyStats != null && weeklyStats.days.isNotEmpty) {
                                 final dayLabels = [
                                   'M',
                                   'T',
@@ -256,10 +270,8 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceEvenly,
                                   children: List.generate(7, (index) {
-                                    final dayTitle = dayTitles[index];
-                                    final dayStats = days[dayTitle];
-                                    final isFilled =
-                                        dayStats?.loggedIn ?? false;
+                                    final dayData = weeklyStats.days[index];
+                                    final isFilled = dayData.login;
 
                                     return CustomStar(
                                       isFilled: isFilled,
@@ -297,13 +309,23 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                'My meditations',
-                                style: TextStyle(
-                                  fontFamily: 'Canela',
-                                  fontSize: 36,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => MyMeditationsPage(),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  'My meditations',
+                                  style: TextStyle(
+                                    fontFamily: 'Canela',
+                                    fontSize: 36,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w300,
+                                  ),
                                 ),
                               ),
                               GestureDetector(
@@ -336,16 +358,15 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
                                 
                                 if (meditationCount == 1) {
                                   // Single card - no scroll needed
+                                  final meditation = myMeditations.first;
+                                  final details = meditation['details'];
+                                  final name = details?['name'] ?? 'Sleep Stream';
+                                  
                                   return VaultRitualCard(
-                                    image:
-                                        myMeditations.first['image'] ??
-                                        'assets/img/card.png',
-                                    title:
-                                        myMeditations.first['title'] ??
-                                        'Sleep Stream',
-                                    subtitle:
-                                        myMeditations.first['description'] ??
-                                        'A deeply personalized journey crafted from your unique vision and dreams',
+                                    name: name,
+                                    meditationId: meditation['id']?.toString(),
+                                    file: meditation['file'],
+                                    onAudioPlay: _onAudioPlay,
                                   );
                                 } else {
                                   // Multiple cards - horizontal scroll
@@ -356,6 +377,9 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
                                       itemCount: meditationCount,
                                       itemBuilder: (context, index) {
                                         final meditation = myMeditations[index];
+                                        final details = meditation['details'];
+                                        final name = details?['name'] ?? 'Sleep Stream';
+                                        
                                         return Padding(
                                           padding: EdgeInsets.only(
                                             right: index < meditationCount - 1 ? 12.0 : 0,
@@ -363,15 +387,10 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
                                           child: SizedBox(
                                             width: MediaQuery.of(context).size.width - 32,
                                             child: VaultRitualCard(
-                                              image:
-                                                  meditation['image'] ??
-                                                  'assets/img/card.png',
-                                              title:
-                                                  meditation['title'] ??
-                                                  'Sleep Stream',
-                                              subtitle:
-                                                  meditation['description'] ??
-                                                  'A deeply personalized journey crafted from your unique vision and dreams',
+                                              name: name,
+                                              meditationId: meditation['id']?.toString(),
+                                              file: meditation['file'],
+                                              onAudioPlay: _onAudioPlay,
                                             ),
                                           ),
                                         );
@@ -381,10 +400,9 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
                                 }
                               } else {
                                 return VaultRitualCard(
-                                  image: 'assets/img/card.png',
-                                  title: 'Sleep Stream',
-                                  subtitle:
-                                      'A deeply personalized journey crafted from your unique vision and dreams',
+                                  name: 'Sleep Stream',
+                                  meditationId: '1',
+                                  onAudioPlay: _onAudioPlay,
                                 );
                               }
                             },
@@ -439,13 +457,23 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                'The Archive',
-                                style: TextStyle(
-                                  fontFamily: 'Canela',
-                                  fontSize: 36,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => ArchivePage(),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  'The Archive',
+                                  style: TextStyle(
+                                    fontFamily: 'Canela',
+                                    fontSize: 36,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w300,
+                                  ),
                                 ),
                               ),
                               GestureDetector(
@@ -468,32 +496,46 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
                           const SizedBox(height: 16),
                           Consumer<MeditationStore>(
                             builder: (context, meditationStore, child) {
-                              final archiveMeditation =
-                                  meditationStore.archiveMeditation;
+                              final libraryDatas = meditationStore.libraryDatas;
 
-                              if (archiveMeditation != null &&
-                                  archiveMeditation.isNotEmpty) {
-                                // If archiveMeditation has items, show cards based on count
-                                return Column(
-                                  children: List.generate(
-                                    archiveMeditation.length,
-                                    (index) {
+                              if (libraryDatas != null && libraryDatas.isNotEmpty) {
+                                // If libraryDatas has items, show cards in horizontal scroll
+                                return SizedBox(
+                                  height: 100,
+                                  child: ListView.builder(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: libraryDatas.length,
+                                    itemBuilder: (context, index) {
+                                      final meditation = libraryDatas[index];
+                                      final name = meditation['name'] ?? 'Morning Meditation';
+                                      
                                       return Padding(
-                                        padding: const EdgeInsets.only(
-                                          bottom: 16.0,
+                                        padding: EdgeInsets.only(
+                                          right: index < libraryDatas.length - 1 ? 12.0 : 0,
                                         ),
-                                        child: VaultRitualCard(
-                                          image: 'assets/img/card.png',
-                                          title: 'Morning Meditation',
-                                          subtitle:
-                                              'Start your day with positive energy and clarity',
+                                        child: SizedBox(
+                                          width: MediaQuery.of(context).size.width - 32,
+                                          child: VaultRitualCard(
+                                            name: name,
+                                            meditationId: meditation['id']?.toString(),
+                                            file: meditation['file'],
+                                            imageUrl: meditation['image'],
+                                            title: meditation['name'],
+                                            description: meditation['description'],
+                                            onAudioPlay: (id) => _onAudioPlay(
+                                              id,
+                                              title: meditation['name'],
+                                              description: meditation['description'],
+                                              imageUrl: meditation['image'],
+                                            ),
+                                          ),
                                         ),
                                       );
                                     },
                                   ),
                                 );
                               } else {
-                                // If no archiveMeditation, show no cards
+                                // If no libraryDatas, show no cards
                                 return const SizedBox.shrink();
                               }
                             },
@@ -502,8 +544,8 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],

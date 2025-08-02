@@ -113,9 +113,9 @@ class AuthScaffold extends StatelessWidget {
                       child: (padding != null)
                           ? Padding(
                               padding: padding!,
-                              child: SingleChildScrollView(child: child),
+                              child: child,
                             )
-                          : SingleChildScrollView(child: child),
+                          : child,
                     ),
                   ],
                 ),

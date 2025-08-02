@@ -111,53 +111,62 @@ class _PlanPageState extends State<PlanPage> {
         onBack = null;
         break;
       case PlanStep.dreamLifeIntro:
-        title = 'Set sail to your dream life';
+        title = '';
         subtitle = null;
-        child = Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: 32),
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: PlanPageStyles.cardBg,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Text(
-                'We will set up your profile based on your answers to generate your customized manifesting meditation experience, grounded in neuroscience, and tailored to you.',
-                style: PlanPageStyles.cardBody,
-                textAlign: TextAlign.center,
-              ),
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              height: 56,
-              width: double.infinity,
-              child: ElevatedButton(
-                style: PlanPageStyles.mainButton,
-                onPressed: () {
-                  Navigator.pushNamed(context, '/generator');
-                },
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Continue to Dream Life Intake',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontFamily: 'Satoshi',
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    Icon(Icons.arrow_forward, color: Colors.white),
-                  ],
+        child = Center(
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Set sail to your dream life',
+                  style: PlanPageStyles.pageTitle,
+                  textAlign: TextAlign.center,
                 ),
-              ),
+                const SizedBox(height: 40),
+                Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: PlanPageStyles.cardBg,
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Text(
+                    'We will set up your profile based on your answers to generate your customized manifesting meditation experience, grounded in neuroscience, and tailored to you.',
+                    style: PlanPageStyles.cardBody,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  height: 56,
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: PlanPageStyles.mainButton,
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/generator');
+                    },
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Continue to Dream Life Intake',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontFamily: 'Satoshi',
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Icon(Icons.arrow_forward, color: Colors.white),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-          ],
+          ),
         );
         onBack = () {
           setState(() {

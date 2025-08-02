@@ -64,13 +64,18 @@ class _StarterPageState extends State<StarterPage> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: StarterPageStyles.systemUiStyleWhite,
       child: Scaffold(
-        backgroundColor: Colors.transparent,
+        backgroundColor: const Color(0xFF5398DA),
         body: Stack(
           children: [
+            // Video background
             if (_isInitialized && _controller != null)
-              SizedBox.expand(
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: MediaQuery.of(context).size.height,
                 child: FittedBox(
-                  fit: StarterPageStyles.videoFit,
+                  fit: BoxFit.cover,
                   child: SizedBox(
                     width: _controller!.value.size.width,
                     height: _controller!.value.size.height,
@@ -78,9 +83,12 @@ class _StarterPageState extends State<StarterPage> {
                   ),
                 ),
               ),
+            
+            // Content
             SafeArea(
               child: Column(
                 children: [
+                  // Header
                   Padding(
                     padding: SpacingStyles.starterPagePadding,
                     child: Row(
@@ -117,57 +125,70 @@ class _StarterPageState extends State<StarterPage> {
                       ],
                     ),
                   ),
-                  // Restore the original layout: use Spacer to push the text section down
-                  const Spacer(),
-                  Text(
-                    'Navigate\nfrom Within',
-                    textAlign: TextAlign.center,
-                    style: TextStyles.headingLarge,
+                  
+                  // Main content
+                  Expanded(
+                    child: Container(),
                   ),
-                  SpacingStyles.spacingMedium,
-                  Padding(
-                    padding: SpacingStyles.starterPageContentPadding,
-                    child: Text(
-                      'Vela is the only meditation app built specifically for you. Personalized meditations built from your joy, identity, and dreams.\n\nGuided by AI, grounded in neuroscience. Set sail to manifest your dream life, with Vela.',
-                      textAlign: TextAlign.center,
-                      style: TextStyles.bodyLarge,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Padding(
+                  
+                  // Bottom content container
+                  Container(
                     padding: SpacingStyles.paddingHorizontal,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/login');
-                      },
-                      style: ButtonStyles.primary,
-                      child: Text(
-                        'Get Started',
-                        style: ButtonStyles.primaryText,
-                      ),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Navigate\nfrom Within',
+                          textAlign: TextAlign.center,
+                          style: TextStyles.headingLarge,
+                        ),
+                        
+                        const SizedBox(height: 40),
+                        
+                        Text(
+                          'Vela is the only meditation app built \n specifically for you',
+                          textAlign: TextAlign.center,
+                          style: TextStyles.bodyLarge,
+                        ),
+                        
+                          const SizedBox(height: 40),
+                        
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/login');
+                          },
+                          style: ButtonStyles.primary,
+                          child: Text(
+                            'Next',
+                            style: ButtonStyles.primaryText,
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 8),
+                        
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/login');
+                          },
+                          style: ButtonStyles.text,
+                          child: RichText(
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: 'Already have an account? ',
+                                  style: BaseStyles.signInLinkText,
+                                ),
+                                TextSpan(
+                                  text: 'Sign in',
+                                  style: BaseStyles.signInUnderlinedText,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  SpacingStyles.spacingSmall,
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/login');
-                    },
-                    style: ButtonStyles.text,
-                    child: RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: 'Already have an account? ',
-                            style: BaseStyles.signInLinkText,
-                          ),
-                          TextSpan(
-                            text: 'Sign in',
-                            style: BaseStyles.signInUnderlinedText,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  
                   SpacingStyles.spacingSmall,
                 ],
               ),

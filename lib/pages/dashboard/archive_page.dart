@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../vault/vault_ritual_card.dart';
 import '../../shared/widgets/stars_animation.dart';
 import '../../core/stores/meditation_store.dart';
+import 'components/dashboard_audio_player.dart';
 
 class ArchivePage extends StatefulWidget {
   const ArchivePage({super.key});
@@ -15,13 +16,13 @@ class _ArchivePageState extends State<ArchivePage> {
   @override
   void initState() {
     super.initState();
-    // Fetch archive meditations when page loads
+    // Fetch meditation library when page loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final meditationStore = Provider.of<MeditationStore>(
         context,
         listen: false,
       );
-      meditationStore.restoreMeditation();
+      meditationStore.fetchMeditationLibrary();
     });
   }
 
@@ -62,7 +63,7 @@ class _ArchivePageState extends State<ArchivePage> {
                     fontFamily: 'Canela',
                     fontSize: 36,
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w300,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -80,45 +81,55 @@ class _ArchivePageState extends State<ArchivePage> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Consumer<MeditationStore>(
                       builder: (context, meditationStore, child) {
-                        final archiveMeditation = meditationStore.archiveMeditation;
-                        final archiveCount = archiveMeditation?.length ?? 0;
+                        // Show loading indicator while fetching data
+                        if (meditationStore.isLoading) {
+                          return const Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                            ),
+                          );
+                        }
+
+                        final libraryDatas = meditationStore.libraryDatas;
+                        final libraryCount = libraryDatas?.length ?? 0;
                         
-                        if (archiveCount > 0) {
-                          // Show cards based on archive count
-                          if (archiveCount == 1) {
-                            // Single card - no scroll needed
-                            return VaultRitualCard(
-                              image: 'assets/img/card.png',
-                              title: 'Morning Meditation',
-                              subtitle: 'Start your day with positive energy and clarity',
-                            );
-                          } else {
-                            // Multiple cards - horizontal scroll
-                            return SizedBox(
-                              height: 100,
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: archiveCount,
-                                itemBuilder: (context, index) {
-                                  return Padding(
-                                    padding: EdgeInsets.only(
-                                      right: index < archiveCount - 1 ? 16.0 : 0,
-                                    ),
-                                    child: SizedBox(
-                                      width: MediaQuery.of(context).size.width - 32,
-                                      child: VaultRitualCard(
-                                        image: 'assets/img/card.png',
-                                        title: 'Morning Meditation',
-                                        subtitle: 'Start your day with positive energy and clarity',
+                        if (libraryCount > 0) {
+                          // Show all cards in vertical scroll
+                          return Column(
+                            children: List.generate(libraryCount, (index) {
+                              final meditation = libraryDatas![index];
+                              final name = meditation['name'] ?? 'Morning Meditation';
+                              
+                              return Padding(
+                                padding: EdgeInsets.only(
+                                  bottom: index < libraryCount - 1 ? 16.0 : 0,
+                                ),
+                                child: VaultRitualCard(
+                                  name: name,
+                                  meditationId: meditation['id']?.toString(),
+                                  file: meditation['file'],
+                                  imageUrl: meditation['image'],
+                                  title: meditation['name'],
+                                  description: meditation['description'],
+                                  onAudioPlay: (meditationId) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => DashboardAudioPlayer(
+                                          meditationId: meditationId,
+                                          title: meditation['name'],
+                                          description: meditation['description'],
+                                          imageUrl: meditation['image'],
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            );
-                          }
+                                    );
+                                  },
+                                ),
+                              );
+                            }),
+                          );
                         } else {
-                          // Show no cards if no archive meditations
+                          // Show no cards if no library meditations
                           return const SizedBox.shrink();
                         }
                       },

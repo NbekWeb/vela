@@ -13,6 +13,7 @@ class AppStyles {
     fontFamily: 'Canela',
     fontSize: 64,
     color: white,
+    height: 1,
     fontWeight: FontWeight.w400,
   );
 

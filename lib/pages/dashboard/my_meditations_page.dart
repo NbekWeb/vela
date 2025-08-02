@@ -4,17 +4,19 @@ import '../vault/vault_ritual_card.dart';
 import '../../shared/widgets/stars_animation.dart';
 import '../../core/stores/meditation_store.dart';
 import '../generator/generator_page.dart';
+import 'main.dart';
 
 class MyMeditationsPage extends StatelessWidget {
-  const MyMeditationsPage({super.key});
+  final Function(String)? onAudioPlay;
+  
+  const MyMeditationsPage({this.onAudioPlay, super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
-          const StarsAnimation(
-          ),
+          const StarsAnimation(),
           SafeArea(
             child: Column(
               children: [
@@ -46,7 +48,7 @@ class MyMeditationsPage extends StatelessWidget {
                     fontFamily: 'Canela',
                     fontSize: 36,
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w300,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -66,27 +68,32 @@ class MyMeditationsPage extends StatelessWidget {
                       builder: (context, meditationStore, child) {
                         final myMeditations = meditationStore.myMeditations;
                         final meditationCount = myMeditations?.length ?? 0;
-                        
+
                         if (meditationCount > 0) {
                           // Show cards based on meditation count
                           return Column(
                             children: List.generate(meditationCount, (index) {
+                              final meditation = myMeditations![index];
+                              final details = meditation['details'];
+                              final name = details?['name'] ?? 'Sleep Stream';
+                              
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 16.0),
                                 child: VaultRitualCard(
-                                  image: 'assets/img/card.png',
-                                  title: 'Sleep Stream',
-                                  subtitle: 'A deeply personalized journey crafted from your unique vision and dreams',
+                                  name: name,
+                                  meditationId: meditation['id']?.toString(),
+                                  file: meditation['file'],
+                                  onAudioPlay: onAudioPlay,
                                 ),
                               );
                             }),
                           );
                         } else {
                           // Show default card if no meditations
-                          return const VaultRitualCard(
-                            image: 'assets/img/card.png',
-                            title: 'Sleep Stream',
-                            subtitle: 'A deeply personalized journey crafted from your unique vision and dreams',
+                          return VaultRitualCard(
+                            name: 'Sleep Stream',
+                            meditationId: '1',
+                            onAudioPlay: onAudioPlay,
                           );
                         }
                       },
@@ -94,24 +101,30 @@ class MyMeditationsPage extends StatelessWidget {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
                   child: SizedBox(
                     width: double.infinity,
-                                          child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const GeneratorPage(),
-                            ),
-                          );
-                        },
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const GeneratorPage(),
+                          ),
+                        );
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF3B6EAA),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(32),
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 16,
+                        ),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -119,7 +132,7 @@ class MyMeditationsPage extends StatelessWidget {
                           const Expanded(
                             child: Center(
                               child: Text(
-                                'Generate New Meditation',
+                                'Generate New Meditation ',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 18,
@@ -145,4 +158,4 @@ class MyMeditationsPage extends StatelessWidget {
       ),
     );
   }
-} 
+}

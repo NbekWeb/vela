@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 
 import '../../core/utils/validators.dart';
 import '../../shared/widgets/stars_animation.dart';
@@ -23,6 +24,13 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   bool _obscurePassword = true;
+  late KeyboardVisibilityController _keyboardVisibilityController;
+
+  @override
+  void initState() {
+    super.initState();
+    _keyboardVisibilityController = KeyboardVisibilityController();
+  }
 
   @override
   void dispose() {
@@ -35,7 +43,8 @@ class _LoginPageState extends State<LoginPage> {
     final authStore = context.read<AuthStore>();
     await authStore.loginWithGoogle();
     
-    if (authStore.isAuthenticated && mounted) {
+    final isAuthenticated = await authStore.isAuthenticated();
+    if (isAuthenticated && mounted) {
       Navigator.pushReplacementNamed(context, '/plan');
     } else if (authStore.error != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -58,7 +67,8 @@ class _LoginPageState extends State<LoginPage> {
       password: _passwordController.text,
     );
     
-    if (authStore.isAuthenticated && mounted) {
+    final isAuthenticated = await authStore.isAuthenticated();
+    if (isAuthenticated && mounted) {
       Navigator.pushReplacementNamed(context, '/dashboard');
     } else if (authStore.error != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -84,6 +94,13 @@ class _LoginPageState extends State<LoginPage> {
         controller: controller,
         obscureText: obscure,
         validator: validator,
+        textInputAction: label == 'Email address' ? TextInputAction.next : TextInputAction.done,
+        onFieldSubmitted: label == 'Email address' ? (_) => FocusScope.of(context).nextFocus() : (_) => FocusScope.of(context).unfocus(),
+        keyboardType: label == 'Email address' ? TextInputType.emailAddress : TextInputType.visiblePassword,
+        enableSuggestions: false,
+        autocorrect: false,
+        cursorColor: Colors.white,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
         style: LoginPageStyles.subtitleStyle.copyWith(color: Colors.white),
         decoration: InputDecoration(
           hintText: label,
@@ -155,196 +172,201 @@ class _LoginPageState extends State<LoginPage> {
             systemNavigationBarIconBrightness: Brightness.dark,
           ),
           child: Scaffold(
-        body: GestureDetector(
-          onTap: () => FocusScope.of(context).unfocus(),
-          child: Stack(
-            children: [
-              const StarsAnimation(),
-              SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: SizedBox(
-                    height: MediaQuery.of(context).size.height - 40,
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
+            resizeToAvoidBottomInset: false,
+            body: KeyboardVisibilityBuilder(
+              controller: _keyboardVisibilityController,
+              builder: (context, isKeyboardVisible) {
+                return GestureDetector(
+                  onTap: () => FocusScope.of(context).unfocus(),
+                  behavior: HitTestBehavior.opaque,
+                  child: Stack(
+                    children: [
+                      const Positioned.fill(
+                        child: StarsAnimation(),
+                      ),
+                                              SafeArea(
+                          bottom: false,
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                              left: 20,
+                              right: 20,
+                              bottom: isKeyboardVisible ? 0 : 0,
+                            ),
+                          child: Column(
                             children: [
-                              const SizedBox(height: 24),
-                              Row(
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.arrow_back,
-                                      color: BaseStyles.white,
-                                      size: 30,
+                                                              Expanded(
+                                  child: SingleChildScrollView(
+                                    physics: const BouncingScrollPhysics(),
+                                    padding: EdgeInsets.only(
+                                      bottom: isKeyboardVisible ? 20 : 0,
                                     ),
-                                    onPressed: () => Navigator.of(context).maybePop(),
-                                  ),
-                                  Expanded(
-                                    child: Center(
-                                      child: SvgPicture.asset(
-                                        'assets/icons/logo.svg',
-                                        width: 60,
-                                        height: 40,
-                                      ),
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.info_outline,
-                                      color: BaseStyles.white,
-                                      size: 30,
-                                    ),
-                                    onPressed: () {
-                                      openPopupFromTop(context, const HowWorkModal());
-                                    },
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 24),
-                              Center(
-                                child: Text(
-                                  'Continue to sign in',
-                                  style: LoginPageStyles.titleStyle.copyWith(fontSize: 32, color: Colors.white),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Center(
-                                child: Text(
-                                  "If you already have an account, we'll log you in.",
-                                  style: LoginPageStyles.subtitleStyle.copyWith(color: Color(0xFFF2EFEA)),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                              const SizedBox(height: 36),
-                              _buildTextField(
-                                label: 'Email address',
-                                controller: _emailController,
-                                validator: Validators.validateEmail,
-                              ),
-                              _buildTextField(
-                                label: 'Password',
-                                controller: _passwordController,
-                                obscure: _obscurePassword,
-                                validator: Validators.validatePassword,
-                                suffixIcon: Icon(
-                                  _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                                  color: Color(0xFFF2EFEA),
-                                ),
-                                onSuffixTap: () {
-                                  setState(() {
-                                    _obscurePassword = !_obscurePassword;
-                                  });
-                                },
-                              ),
-                              const SizedBox(height: 20),
-                              SizedBox(
-                                height: 60,
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF3C6EAB),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(30),
-                                    ),
-                                    elevation: 2,
-                                  ),
-                                  onPressed: authStore.isLoading ? null : _handleEmailLogin,
-                                  child: authStore.isLoading
-                                      ? const SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                          ),
-                                        )
-                                      : const Text(
-                                          'Login',
-                                          style: LoginPageStyles.orContinueStyle,
-                                        ),
-                                ),
-                              ),
-                              // const SizedBox(height: 48),
-                              // Center(
-                              //   child: Text(
-                              //     '- or continue with -',
-                              //     style: LoginPageStyles.orContinueStyle.copyWith(color: Colors.white),
-                              //   ),
-                              // ),
-                              // const SizedBox(height: 20),
-                              // Row(
-                              //   mainAxisAlignment: MainAxisAlignment.center,
-                              //   children: [
-                              //     _buildSocialButton(asset: 'assets/icons/apple.svg', onTap: () {}),
-                              //     const SizedBox(width: 16),
-                              //     _buildSocialButton(asset: 'assets/icons/google.svg', onTap: _isLoading ? (){} : _handleGoogleSignIn),
-                              //     const SizedBox(width: 16),
-                              //     _buildSocialButton(asset: 'assets/icons/facebook.svg', onTap: () {}),
-                              //   ],
-                              // ),
-                              // const SizedBox(height: 32),
-                              Padding(
-                                padding: const EdgeInsets.only(top: 20),
-                                child: Center(
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      Navigator.pushNamed(context, '/register');
-                                    },
-                                    child: RichText(
-                                      text: TextSpan(
-                                        text: "Don't have an account? ",
-                                        style: LoginPageStyles.subtitleStyle.copyWith(color: Color(0xFFDCE6F0)),
-                                        children: [
-                                          TextSpan(
-                                            text: 'Sign up',
-                                            style: LoginPageStyles.orContinueStyle.copyWith(
-                                              color: Color(0xFFDCE6F0),
-                                              fontWeight: FontWeight.bold,
-                                              decoration: TextDecoration.underline,
+                                  child: Form(
+                                    key: _formKey,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                                      children: [
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                                          children: [
+                                            const SizedBox(height: 24),
+                                            Row(
+                                              children: [
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    Icons.arrow_back,
+                                                    color: BaseStyles.white,
+                                                    size: 30,
+                                                  ),
+                                                  onPressed: () => Navigator.of(context).maybePop(),
+                                                ),
+                                                Expanded(
+                                                  child: Center(
+                                                    child: SvgPicture.asset(
+                                                      'assets/icons/logo.svg',
+                                                      width: 60,
+                                                      height: 40,
+                                                    ),
+                                                  ),
+                                                ),
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    Icons.info_outline,
+                                                    color: BaseStyles.white,
+                                                    size: 30,
+                                                  ),
+                                                  onPressed: () {
+                                                    openPopupFromTop(context, const HowWorkModal());
+                                                  },
+                                                ),
+                                              ],
                                             ),
-                                          ),
-                                        ],
-                                      ),
+                                            const SizedBox(height: 24),
+                                            Center(
+                                              child: Text(
+                                                'Continue to sign in',
+                                                style: LoginPageStyles.titleStyle.copyWith(fontSize: 32, color: Colors.white),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Center(
+                                              child: Text(
+                                                "If you already have an account, we'll log you in.",
+                                                style: LoginPageStyles.subtitleStyle.copyWith(color: Color(0xFFF2EFEA)),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 36),
+                                            _buildTextField(
+                                              label: 'Email address',
+                                              controller: _emailController,
+                                              validator: Validators.validateEmail,
+                                            ),
+                                            _buildTextField(
+                                              label: 'Password',
+                                              controller: _passwordController,
+                                              obscure: _obscurePassword,
+                                              validator: Validators.validatePassword,
+                                              suffixIcon: Icon(
+                                                _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                                                color: Color(0xFFF2EFEA),
+                                              ),
+                                              onSuffixTap: () {
+                                                setState(() {
+                                                  _obscurePassword = !_obscurePassword;
+                                                });
+                                              },
+                                            ),
+                                            const SizedBox(height: 20),
+                                            SizedBox(
+                                              height: 60,
+                                              child: ElevatedButton(
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: const Color(0xFF3C6EAB),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(30),
+                                                  ),
+                                                  elevation: 2,
+                                                ),
+                                                onPressed: authStore.isLoading ? null : _handleEmailLogin,
+                                                child: authStore.isLoading
+                                                    ? const SizedBox(
+                                                        width: 20,
+                                                        height: 20,
+                                                        child: CircularProgressIndicator(
+                                                          strokeWidth: 2,
+                                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                                        ),
+                                                      )
+                                                    : const Text(
+                                                        'Login',
+                                                        style: LoginPageStyles.orContinueStyle,
+                                                      ),
+                                              ),
+                                            ),
+                                            Padding(
+                                              padding: const EdgeInsets.only(top: 20),
+                                              child: Center(
+                                                child: GestureDetector(
+                                                  onTap: () {
+                                                    Navigator.pushNamed(context, '/register');
+                                                  },
+                                                  child: RichText(
+                                                    text: TextSpan(
+                                                      text: "Don't have an account? ",
+                                                      style: LoginPageStyles.subtitleStyle.copyWith(color: Color(0xFFDCE6F0)),
+                                                      children: [
+                                                        TextSpan(
+                                                          text: 'Sign up',
+                                                          style: LoginPageStyles.orContinueStyle.copyWith(
+                                                            color: Color(0xFFDCE6F0),
+                                                            fontWeight: FontWeight.bold,
+                                                            decoration: TextDecoration.underline,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                          ],
+                                        ),
+                                        SizedBox(height: isKeyboardVisible ? 20 : MediaQuery.of(context).size.height * 0.2),
+                                      ],
                                     ),
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 8),
                             ],
                           ),
-                        ],
+                        ),
                       ),
-                    ),
+                      if (!isKeyboardVisible)
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 40,
+                          child: Center(
+                            child: Text(
+                              'By using Vela you agree to our Terms',
+                              style: LoginPageStyles.signUpTextStyle.copyWith(
+                                color: Color(0xFFDCE6F0),
+                                fontSize: 14,
+                                letterSpacing: -0.5,
+                                height: 21/12,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-                ),
-              ),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 40,
-                child: Center(
-                  child: Text(
-                    'By using Vela you agree to our Terms',
-                    style: LoginPageStyles.signUpTextStyle.copyWith(
-                      color: Color(0xFFDCE6F0),
-                      fontSize: 14,
-                      letterSpacing: -0.5,
-                      height: 21/12,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ],
+                );
+              },
+            ),
           ),
-        ),
-      ),
         );
       },
     );

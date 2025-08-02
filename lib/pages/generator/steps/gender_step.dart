@@ -45,7 +45,7 @@ class _GenderStepState extends State<GenderStep> {
   @override
   Widget build(BuildContext context) {
     return StepScaffold(
-      title: 'Gender?',
+      title: '',
       onBack: widget.onBack ?? () => Navigator.of(context).pop(),
       onNext: widget.onNext,
       currentStep: widget.currentStep,
@@ -53,19 +53,35 @@ class _GenderStepState extends State<GenderStep> {
       nextEnabled: selectedIndex != null,
       stepperIndex: widget.stepperIndex,
       stepperCount: widget.stepperCount,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.only(left: 24, right: 24, top: 24, bottom: 140),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Expanded(child: _genderButton(0, 'Female')),
-              const SizedBox(width: 15),
-              Expanded(child: _genderButton(1, 'Male')),
+              Text(
+                'Gender?',
+                style: const TextStyle(
+                  fontFamily: 'Canela',
+                  fontSize: 32,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w300,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 40),
+              Row(
+                children: [
+                  Expanded(child: _genderButton(0, 'Female')),
+                  const SizedBox(width: 15),
+                  Expanded(child: _genderButton(1, 'Male')),
+                ],
+              ),
+              const SizedBox(height: 15),
+              _genderButton(2, 'Non-binary/Other', isFullWidth: true),
             ],
           ),
-          const SizedBox(height: 15),
-          _genderButton(2, 'Non-binary/Other', isFullWidth: true),
-        ],
+        ),
       ),
     );
   }

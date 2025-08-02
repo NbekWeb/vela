@@ -242,17 +242,7 @@ class _GeneratingMeditationState extends State<GeneratingMeditation> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              if (_isGenerating) ...[
-                const SizedBox(height: 24),
-                const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFF2EFEA)),
-                  ),
-                ),
-              ],
+           
               SizedBox(height: widget.bottomPadding),
             ],
           ),

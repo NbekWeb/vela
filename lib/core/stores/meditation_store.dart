@@ -16,6 +16,7 @@ class MeditationStore extends ChangeNotifier {
   String? _storedTone;
   String? _storedDuration;
   int? _storedPlanType;
+  String? _storedRitualId;
 
   // Generated data storage
   Map<String, dynamic>? _generatedData;
@@ -23,8 +24,14 @@ class MeditationStore extends ChangeNotifier {
   // My meditations storage
   List<Map<String, dynamic>>? _myMeditations;
 
+  // File URL storage
+  String? _fileUrl;
+
   // Archive meditation storage (for restored meditations)
   List<Map<String, dynamic>>? _archiveMeditation;
+
+  // Library meditation storage
+  List<Map<String, dynamic>>? _libraryDatas;
 
   // Services
   static final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
@@ -39,6 +46,7 @@ class MeditationStore extends ChangeNotifier {
   String? get storedTone => _storedTone;
   String? get storedDuration => _storedDuration;
   int? get storedPlanType => _storedPlanType;
+  String? get storedRitualId => _storedRitualId;
 
   // Generated data getter
   Map<String, dynamic>? get generatedData => _generatedData;
@@ -46,8 +54,14 @@ class MeditationStore extends ChangeNotifier {
   // My meditations getter
   List<Map<String, dynamic>>? get myMeditations => _myMeditations;
 
+  // File URL getter
+  String? get fileUrl => _fileUrl;
+
   // Archive meditation getter (for restored meditations)
   List<Map<String, dynamic>>? get archiveMeditation => _archiveMeditation;
+
+  // Library meditation getter
+  List<Map<String, dynamic>>? get libraryDatas => _libraryDatas;
 
   // Actions
   void setLoading(bool loading) {
@@ -77,8 +91,18 @@ class MeditationStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setFileUrl(String? fileUrl) {
+    _fileUrl = fileUrl;
+    notifyListeners();
+  }
+
   void setArchiveMeditation(List<Map<String, dynamic>>? meditation) {
     _archiveMeditation = meditation;
+    notifyListeners();
+  }
+
+  void setLibraryDatas(List<Map<String, dynamic>>? libraryData) {
+    _libraryDatas = libraryData;
     notifyListeners();
   }
 
@@ -88,17 +112,29 @@ class MeditationStore extends ChangeNotifier {
     required String tone,
     required String duration,
     required int planType,
+    String? fileUrl,
+    String? ritualId,
   }) async {
     try {
       await _secureStorage.write(key: 'ritual_type', value: ritualType);
       await _secureStorage.write(key: 'tone', value: tone);
       await _secureStorage.write(key: 'duration', value: duration);
       await _secureStorage.write(key: 'plan_type', value: planType.toString());
+      if (fileUrl != null) {
+        await _secureStorage.write(key: 'file', value: fileUrl);
+      }
+      if (ritualId != null) {
+        await _secureStorage.write(key: 'ritual_id', value: ritualId);
+      }
 
       _storedRitualType = ritualType;
       _storedTone = tone;
       _storedDuration = duration;
       _storedPlanType = planType;
+      _storedRitualId = ritualId;
+      if (fileUrl != null) {
+        _fileUrl = fileUrl;
+      }
 
       notifyListeners();
     } catch (e) {
@@ -113,6 +149,8 @@ class MeditationStore extends ChangeNotifier {
       _storedDuration = await _secureStorage.read(key: 'duration');
       final planTypeStr = await _secureStorage.read(key: 'plan_type');
       _storedPlanType = planTypeStr != null ? int.tryParse(planTypeStr) : null;
+      _storedRitualId = await _secureStorage.read(key: 'ritual_id');
+      _fileUrl = await _secureStorage.read(key: 'file');
 
       notifyListeners();
     } catch (e) {
@@ -122,15 +160,17 @@ class MeditationStore extends ChangeNotifier {
 
   Future<void> clearRitualSettings() async {
     try {
-      await _secureStorage.delete(key: 'ritual_type');
+      // await _secureStorage.delete(key: 'ritual_type');
       await _secureStorage.delete(key: 'tone');
       await _secureStorage.delete(key: 'duration');
       await _secureStorage.delete(key: 'plan_type');
+      await _secureStorage.delete(key: 'ritual_id');
 
       _storedRitualType = null;
       _storedTone = null;
       _storedDuration = null;
       _storedPlanType = null;
+      _storedRitualId = null;
 
       notifyListeners();
     } catch (e) {}
@@ -182,6 +222,44 @@ class MeditationStore extends ChangeNotifier {
     }
   }
 
+  // Fetch meditation library
+  Future<void> fetchMeditationLibrary() async {
+    setLoading(true);
+    setError(null);
+
+    try {
+      final response = await ApiService.request(
+        url: 'auth/meditation-library/',
+        method: 'GET',
+      );
+      print('🔍 Meditation Library Response: ${response.data}');
+
+      _handleMeditationLibraryResponse(response.data);
+    } catch (e) {
+      _handleMeditationLibraryError();
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Helper method to map ritual type name to ID
+  String _mapRitualTypeNameToId(String ritualTypeName) {
+    final firstWord = ritualTypeName.split(' ').first.toLowerCase();
+    
+    switch (firstWord) {
+      case 'sleep':
+        return '1';
+      case 'morning':
+        return '2';
+      case 'calming':
+        return '3';
+      case 'dream':
+        return '4';
+      default:
+        return '1'; // Default to Sleep Manifestation
+    }
+  }
+
   // Post combined profile and save to store
   Future<void> postCombinedProfile({
     required String gender,
@@ -197,6 +275,7 @@ class MeditationStore extends ChangeNotifier {
     required String duration,
     int? planType,
   }) async {
+    print('🔍 postCombinedProfile called');
     setLoading(true);
     setError(null);
 
@@ -208,7 +287,6 @@ class MeditationStore extends ChangeNotifier {
         "goals": goals,
         "age_range": ageRange.split('-').last.trim(),
         "happiness": happiness,
-        "name": name,
         "description": description,
         "ritual_type": ritualType,
         "tone": tone,
@@ -217,23 +295,62 @@ class MeditationStore extends ChangeNotifier {
       };
 
       final response = await ApiService.request(
-        url: 'auth/meditation/combined/',
+        url: 'auth/meditation/external/',
         method: 'POST',
         data: data,
       );
 
-      // Save meditation profile to store
-      final profileData = response.data;
-      if (profileData != null) {
-        final profile = MeditationProfileData.fromJson(profileData);
-        setMeditationProfile(profile);
+      // Handle external meditation response
+      final responseData = response.data;
+      
+      if (responseData != null && responseData['success'] == true) {
+        final fileUrl = responseData['file_url'] ?? responseData['file'];
+        final ritualTypeName = responseData['ritual_type_name'];
+        
+        // Map ritual type name back to ID
+        final mappedRitualType = ritualTypeName != null 
+            ? _mapRitualTypeNameToId(ritualTypeName)
+            : ritualType;
+        
+        if (fileUrl != null && fileUrl.isNotEmpty) {
+          setFileUrl(fileUrl);
+          
+          // Save ritual settings including file URL with mapped ritual type
+          await saveRitualSettings(
+            ritualType: mappedRitualType,
+            tone: tone,
+            duration: duration,
+            planType: planType ?? 1,
+            fileUrl: fileUrl,
+            ritualId: mappedRitualType, // Save ritual ID as well
+          );
+        }
+        
+        // Create a basic meditation profile from the response data
+        final profileData = {
+          'id': responseData['meditation_id'],
+          'file': fileUrl,
+          'plan_type': 1, // Use default plan type since external API returns string
+          'description': responseData['message'],
+          'ritual_type': [mappedRitualType],
+          'tone': [tone],
+          'voice': [voice.isNotEmpty ? voice : 'male'],
+          'duration': [duration.isNotEmpty ? duration : '2'],
+        };
+        
+        try {
+          final profile = MeditationProfileData.fromJson(profileData);
+          setMeditationProfile(profile);
+        } catch (e) {
+          // Continue without setting profile if parsing fails
+        }
       }
-      print('🔍 Response is null: $profileData');
     } catch (e) {
     } finally {
       setLoading(false);
     }
   }
+
 
   // Clear error
   void clearError() {
@@ -288,6 +405,33 @@ class MeditationStore extends ChangeNotifier {
     setArchiveMeditation(null);
   }
 
+  // Private method to handle meditation library response
+  void _handleMeditationLibraryResponse(dynamic response) {
+    final responseData = response;
+    print('🔍 Processing library response data: $responseData');
+    print('🔍 Response data type: ${responseData.runtimeType}');
+    
+    if (responseData != null && responseData is List) {
+      print('🔍 Response is List, length: ${responseData.length}');
+      final libraryData = responseData.cast<Map<String, dynamic>>();
+      setLibraryDatas(libraryData);
+      print('🔍 Set library data: ${libraryData.length} items');
+    } else if (responseData != null && responseData['results'] != null) {
+      // Handle paginated response
+      final results = responseData['results'] as List;
+      final libraryData = results.cast<Map<String, dynamic>>();
+      setLibraryDatas(libraryData);
+    } else {
+      print('🔍 No valid data found, setting empty list');
+      setLibraryDatas([]);
+    }
+  }
+
+  // Private method to handle meditation library error
+  void _handleMeditationLibraryError() {
+    setLibraryDatas(null);
+  }
+
   // Reset store to default state (keeps profile)
   void resetToDefault() {
     _resetStateVariables();
@@ -308,9 +452,11 @@ class MeditationStore extends ChangeNotifier {
     _generatedData = null;
     _myMeditations = null;
     _archiveMeditation = null;
+    _libraryDatas = null;
     _storedRitualType = null;
     _storedTone = null;
     _storedDuration = null;
     _storedPlanType = null;
+    _storedRitualId = null;
   }
 }

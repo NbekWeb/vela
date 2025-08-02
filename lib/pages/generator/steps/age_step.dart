@@ -55,7 +55,7 @@ class _AgeStepState extends State<AgeStep> {
         pillsPerRow;
 
     return StepScaffold(
-      title: 'How old are you?',
+      title: '',
       onBack: widget.onBack,
       onNext: widget.onNext,
       currentStep: widget.currentStep,
@@ -63,31 +63,105 @@ class _AgeStepState extends State<AgeStep> {
       nextEnabled: selectedIndex != null,
       stepperIndex: widget.stepperIndex,
       stepperCount: widget.stepperCount,
-      child: SingleChildScrollView(
-        child: Center(
-          child: Wrap(
-            spacing: pillSpacing,
-            runSpacing: 15,
-            alignment: WrapAlignment.center,
-            children: List.generate(ages.length, (i) {
-              final selected = selectedIndex == i;
-              return _AgePill(
-                label: ages[i],
-                selected: selected,
-                onTap: () {
-                  setState(() => selectedIndex = i);
-                  
-                  // Update local profile data
-                  final updatedProfile = widget.profileData.copyWith(ageRange: ages[i]);
-                  widget.onProfileDataChanged(updatedProfile);
-                  
-                                      // Save to store
-                    final meditationStore = Provider.of<MeditationStore>(context, listen: false);
-                    meditationStore.setMeditationProfile(updatedProfile);
-                },
-                width: pillWidth,
-              );
-            }),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.only(left: 16, right: 16, top: 24, bottom: 140),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'How old are you?',
+                style: const TextStyle(
+                  fontFamily: 'Canela',
+                  fontSize: 32,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w300,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 40),
+              Column(
+                children: [
+                  // First row: 3 pills
+                  Row(
+                    children: [
+                      Expanded(child: _AgePill(
+                        label: ages[0],
+                        selected: selectedIndex == 0,
+                        onTap: () {
+                          setState(() => selectedIndex = 0);
+                          final updatedProfile = widget.profileData.copyWith(ageRange: ages[0]);
+                          widget.onProfileDataChanged(updatedProfile);
+                          final meditationStore = Provider.of<MeditationStore>(context, listen: false);
+                          meditationStore.setMeditationProfile(updatedProfile);
+                        },
+                        width: 0,
+                      )),
+                      const SizedBox(width: 15),
+                      Expanded(child: _AgePill(
+                        label: ages[1],
+                        selected: selectedIndex == 1,
+                        onTap: () {
+                          setState(() => selectedIndex = 1);
+                          final updatedProfile = widget.profileData.copyWith(ageRange: ages[1]);
+                          widget.onProfileDataChanged(updatedProfile);
+                          final meditationStore = Provider.of<MeditationStore>(context, listen: false);
+                          meditationStore.setMeditationProfile(updatedProfile);
+                        },
+                        width: 0,
+                      )),
+                      const SizedBox(width: 15),
+                      Expanded(child: _AgePill(
+                        label: ages[2],
+                        selected: selectedIndex == 2,
+                        onTap: () {
+                          setState(() => selectedIndex = 2);
+                          final updatedProfile = widget.profileData.copyWith(ageRange: ages[2]);
+                          widget.onProfileDataChanged(updatedProfile);
+                          final meditationStore = Provider.of<MeditationStore>(context, listen: false);
+                          meditationStore.setMeditationProfile(updatedProfile);
+                        },
+                        width: 0,
+                      )),
+                    ],
+                  ),
+                  const SizedBox(height: 15),
+                  // Second row: 2 pills centered
+                  Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _AgePill(
+                          label: ages[3],
+                          selected: selectedIndex == 3,
+                          onTap: () {
+                            setState(() => selectedIndex = 3);
+                            final updatedProfile = widget.profileData.copyWith(ageRange: ages[3]);
+                            widget.onProfileDataChanged(updatedProfile);
+                            final meditationStore = Provider.of<MeditationStore>(context, listen: false);
+                            meditationStore.setMeditationProfile(updatedProfile);
+                          },
+                          width: 100,
+                        ),
+                        const SizedBox(width: 15),
+                        _AgePill(
+                          label: ages[4],
+                          selected: selectedIndex == 4,
+                          onTap: () {
+                            setState(() => selectedIndex = 4);
+                            final updatedProfile = widget.profileData.copyWith(ageRange: ages[4]);
+                            widget.onProfileDataChanged(updatedProfile);
+                            final meditationStore = Provider.of<MeditationStore>(context, listen: false);
+                            meditationStore.setMeditationProfile(updatedProfile);
+                          },
+                          width: 100,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),

@@ -139,7 +139,7 @@ class _DashboardCheckInPageState extends State<DashboardCheckInPage> {
                         fontFamily: 'Canela',
                         fontSize: 32,
                         color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w300,
                       ),
                     ),
                     const SizedBox(height: 4),

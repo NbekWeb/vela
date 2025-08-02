@@ -43,14 +43,14 @@ RitualCard(
 
 ```dart
 // Ritual turi bo'yicha filtrlash
-final guidedRituals = RitualDataProvider.getRitualsByType('guided_meditations');
+final guidedRituals = RitualDataProvider.getRitualsByType('guided');
 
 // Tone bo'yicha filtrlash
 final dreamyRituals = RitualDataProvider.getRitualsByTone('dreamy');
 
 // Ko'p kriteriyalar bo'yicha filtrlash
 final filteredRituals = RitualDataProvider.filterRituals(
-  ritualType: 'guided_meditations',
+  ritualType: 'guided',
   tone: 'dreamy',
   voice: 'male',
   duration: '5',
@@ -90,7 +90,7 @@ const newRitual = RitualData(
     end: Alignment.bottomRight,
   ),
   defaultSettings: {
-    'ritualType': ['guided_meditations'],
+    'ritualType': ['guided'],
     'tone': ['dreamy'],
     'voice': ['female'],
     'duration': ['10'],

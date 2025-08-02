@@ -71,82 +71,85 @@ class _HappyStepState extends State<HappyStep> {
 
   @override
   Widget build(BuildContext context) {
-    return StepScaffold(
-      title: '',
-      onBack: widget.onBack,
-      onNext: widget.onNext,
-      currentStep: widget.currentStep,
-      totalSteps: widget.totalSteps,
-      nextEnabled: _controller.text.trim().isNotEmpty,
-      stepperIndex: widget.stepperIndex,
-      stepperCount: widget.stepperCount,
-      // Faqat content scroll bo'ladi!
-      child: Expanded(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const Text(
-                  'What makes you happy?',
-                  style: TextStyle(
-                    fontFamily: 'Canela',
-                    fontWeight: FontWeight.w300,
-                    fontSize: 36,
-                    color: Color(0xFFF2EFEA),
-                  ),
-                  textAlign: TextAlign.center,
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(
+        physics: const NeverScrollableScrollPhysics(),
+      ),
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.opaque,
+        child: StepScaffold(
+          title: '',
+          onBack: widget.onBack,
+          onNext: widget.onNext,
+          currentStep: widget.currentStep,
+          totalSteps: widget.totalSteps,
+          nextEnabled: _controller.text.trim().isNotEmpty,
+          stepperIndex: widget.stepperIndex,
+          stepperCount: widget.stepperCount,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const Text(
+                'What makes you happy?',
+                style: TextStyle(
+                  fontFamily: 'Canela',
+                  fontWeight: FontWeight.w300,
+                  fontSize: 36,
+                  color: Color(0xFFF2EFEA),
                 ),
-                const SizedBox(height: 20),
-                const Text(
-                  'What makes you feel the most "you"?',
-                  style: TextStyle(
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'What makes you feel the most "you"?',
+                style: TextStyle(
+                  fontFamily: 'Satoshi',
+                  fontWeight: FontWeight.w500,
+                  fontSize: 18,
+                  color: Color(0xFFF2EFEA),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: TextField(
+                  controller: _controller,
+                  minLines: 5,
+                  maxLines: 8,
+                  style: const TextStyle(
+                    color: Colors.white,
                     fontFamily: 'Satoshi',
-                    fontWeight: FontWeight.w500,
-                    fontSize: 18,
-                    color: Color(0xFFF2EFEA),
+                    fontSize: 12,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity,
-                  child: TextField(
-                    controller: _controller,
-                    minLines: 5,
-                    maxLines: 8,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontFamily: 'Satoshi',
-                      fontSize: 12,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'I feel most myself when I laugh freely, make art, and spend time in nature.',
-                      hintStyle: const TextStyle(color: Color(0xFFB0B8C1)),
-                      filled: true,
-                      fillColor: Color(0x152B561A),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(
-                          color: Color(0x152B561A),
-                          width: 1,
-                        ),
+                  decoration: InputDecoration(
+                    hintText: 'I feel most myself when I laugh freely, make art, and spend time in nature.',
+                    hintStyle: const TextStyle(color: Color(0xFFFfffff)),
+                    filled: true,
+                    fillColor: Color(0x152B561A),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(
+                        color: Color(0x152B561A),
+                        width: 1,
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(
-                          color: Color(0xFF152B56),
-                          width: 1,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.all(16),
                     ),
-                    onChanged: (_) => _onTextChanged(),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF152B56),
+                        width: 1,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.all(16),
                   ),
+                  onChanged: (_) => _onTextChanged(),
                 ),
-              ],
-            ),
+              ),
+               const SizedBox(height: 30),
+            ],
           ),
         ),
       ),

@@ -58,6 +58,7 @@ class SleepMeditationControlBar extends StatelessWidget {
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
                         fontFamily: 'Satoshi-Bold',
+                        decoration: TextDecoration.none,
                       ),
                     ),
                   ],
@@ -75,4 +76,4 @@ class SleepMeditationControlBar extends StatelessWidget {
       ),
     );
   }
-} 
+}

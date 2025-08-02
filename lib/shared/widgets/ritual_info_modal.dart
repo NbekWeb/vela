@@ -111,7 +111,7 @@ class _CustomizeRitualModalState extends State<CustomizeRitualModal> {
   late int duration;
 
   final List<Map<String, String>> ritualTypes = [
-    {'label': 'Guided Meditations', 'value': 'guided_meditations'},
+    {'label': 'Guided Meditations', 'value': 'guided'},
     {'label': 'Story', 'value': 'story'},
   ];
   final List<Map<String, String>> tones = [
@@ -130,7 +130,7 @@ class _CustomizeRitualModalState extends State<CustomizeRitualModal> {
     // Profile ma'lumotlaridan boshlang'ich qiymatlarni olish
     ritualType = widget.profileData.ritualType?.isNotEmpty == true 
         ? widget.profileData.ritualType!.first 
-        : 'guided_meditations';
+        : 'guided';
     tone = widget.profileData.tone?.isNotEmpty == true 
         ? widget.profileData.tone!.first 
         : 'dreamy';

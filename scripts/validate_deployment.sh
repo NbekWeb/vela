@@ -111,20 +111,6 @@ else
 fi
 cd ..
 
-# Check environment variables
-echo "🔐 Checking environment variables..."
-if [ -z "$APPLE_ID" ]; then
-    echo -e "${YELLOW}⚠️  Warning: APPLE_ID environment variable not set${NC}"
-else
-    echo -e "${GREEN}✅ APPLE_ID is set${NC}"
-fi
-
-if [ -z "$APPLE_APP_SPECIFIC_PASSWORD" ]; then
-    echo -e "${YELLOW}⚠️  Warning: APPLE_APP_SPECIFIC_PASSWORD environment variable not set${NC}"
-else
-    echo -e "${GREEN}✅ APPLE_APP_SPECIFIC_PASSWORD is set${NC}"
-fi
-
 echo ""
 echo -e "${BLUE}📋 Summary:${NC}"
 echo "If you see any ❌ errors above, please fix them before deploying."
@@ -133,6 +119,6 @@ echo ""
 echo -e "${GREEN}🚀 If all checks passed, you're ready to deploy to TestFlight!${NC}"
 echo ""
 echo "Next steps:"
-echo "1. Update version in pubspec.yaml if needed"
-echo "2. Set your environment variables (APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD)"
-echo "3. Run: ./scripts/deploy_testflight.sh" 
+echo "1. Update version in pubspec.yaml if needed: ./scripts/update_version.sh [major|minor|patch|build]"
+echo "2. Run: ./scripts/deploy_testflight.sh"
+echo "3. Manually upload the .ipa file using Xcode Organizer or Transporter app" 

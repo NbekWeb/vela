@@ -18,7 +18,12 @@ import '../core/stores/like_store.dart';
 final _secureStorage = FlutterSecureStorage();
 
 class SleepStreamMeditationPage extends StatefulWidget {
-  const SleepStreamMeditationPage({super.key});
+  final String? meditationId;
+  
+  const SleepStreamMeditationPage({
+    super.key,
+    this.meditationId,
+  });
 
   @override
   State<SleepStreamMeditationPage> createState() =>
@@ -64,14 +69,22 @@ class _SleepStreamMeditationPageState extends State<SleepStreamMeditationPage> {
       final meditationStore = Provider.of<MeditationStore>(context, listen: false);
       final profileData = meditationStore.meditationProfile;
 
-      // Profile data dan file_url ni olish
-      if (profileData?.fileUrl != null && profileData!.fileUrl!.isNotEmpty) {
-        fileUrl = profileData.fileUrl;
-        debugPrint('Got fileUrl from profile: $fileUrl');
-      } else {
-        // Fallback: storage dan olish
-        fileUrl = await _secureStorage.read(key: 'meditation_file_url');
-        debugPrint('Got fileUrl from storage: $fileUrl');
+      // Agar meditationId berilgan bo'lsa, uni ishlat
+      if (widget.meditationId != null) {
+        debugPrint('Using provided meditationId: ${widget.meditationId}');
+        // Bu yerda meditationId bo'yicha meditation ni yuklash logikasi bo'lishi kerak
+        // Hozircha store dan olishni davom ettiramiz
+      }
+
+      fileUrl = meditationStore.fileUrl;
+      debugPrint('Got fileUrl from store: $fileUrl');
+      
+      // Agar fileUrl null bo'lsa, qisqa kutish va qayta urinish
+      if (fileUrl == null || fileUrl!.isEmpty) {
+        debugPrint('FileUrl is null, waiting a bit and retrying...');
+        await Future.delayed(const Duration(milliseconds: 500));
+        fileUrl = meditationStore.fileUrl;
+        debugPrint('Retried fileUrl from store: $fileUrl');
       }
 
       // Dispose previous audio player if exists
@@ -124,7 +137,7 @@ class _SleepStreamMeditationPageState extends State<SleepStreamMeditationPage> {
         // Prepare waveform after audio player is ready
         await _prepareWaveform();
       } else {
-        debugPrint('No fileUrl available');
+        debugPrint('No fileUrl available from store: ${meditationStore.fileUrl}');
         setState(() {
           _isAudioReady = true;
         });
@@ -148,14 +161,14 @@ class _SleepStreamMeditationPageState extends State<SleepStreamMeditationPage> {
       final meditationStore = Provider.of<MeditationStore>(context, listen: false);
       final profileData = meditationStore.meditationProfile;
 
-      // Profile data dan file_url ni olish
-      String? audioFileUrl;
-      if (profileData?.fileUrl != null && profileData!.fileUrl!.isNotEmpty) {
-        audioFileUrl = profileData.fileUrl;
-      } else {
-        // Fallback: storage dan olish
-        audioFileUrl = await _secureStorage.read(key: 'meditation_file_url');
-       
+      String? audioFileUrl = meditationStore.fileUrl;
+      
+      // Agar audioFileUrl null bo'lsa, qisqa kutish va qayta urinish
+      if (audioFileUrl == null || audioFileUrl.isEmpty) {
+        debugPrint('AudioFileUrl is null, waiting a bit and retrying...');
+        await Future.delayed(const Duration(milliseconds: 500));
+        audioFileUrl = meditationStore.fileUrl;
+        debugPrint('Retried audioFileUrl from store: $audioFileUrl');
       }
 
       if (audioFileUrl != null && audioFileUrl.isNotEmpty) {

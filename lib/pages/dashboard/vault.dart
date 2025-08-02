@@ -6,10 +6,30 @@ import '../vault/vault_buttons.dart';
 import '../vault/vault_ritual_card.dart';
 import '../vault/vault_stat_card.dart';
 import '../check_in_page.dart';
+import '../dashboard/my_meditations_page.dart';
+import '../dashboard/archive_page.dart';
 import '../../core/stores/meditation_store.dart';
 
-class DashboardVaultPage extends StatelessWidget {
-  const DashboardVaultPage({super.key});
+class DashboardVaultPage extends StatefulWidget {
+  final Function(String)? onAudioPlay;
+  
+  const DashboardVaultPage({this.onAudioPlay, super.key});
+
+  @override
+  State<DashboardVaultPage> createState() => _DashboardVaultPageState();
+}
+
+class _DashboardVaultPageState extends State<DashboardVaultPage> {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch meditations when page loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final meditationStore = Provider.of<MeditationStore>(context, listen: false);
+      meditationStore.fetchMyMeditations();
+      meditationStore.fetchMeditationLibrary();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,33 +116,42 @@ class DashboardVaultPage extends StatelessWidget {
                           ),
                           const SizedBox(height: 24),
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            padding: const EdgeInsets.symmetric(horizontal: 0),
                             child: Consumer<MeditationStore>(
                               builder: (context, meditationStore, child) {
-                                final myMeditations = meditationStore.myMeditations;
-                                final meditationCount = myMeditations?.length ?? 0;
-                                
+                                final myMeditations =
+                                    meditationStore.myMeditations;
+                                final meditationCount =
+                                    myMeditations?.length ?? 0;
+
                                 // Calculate total duration from all meditations
                                 int totalDuration = 0;
                                 if (myMeditations != null) {
                                   for (final meditation in myMeditations) {
                                     final details = meditation['details'];
-                                    if (details != null && details['duration'] != null) {
-                                      final duration = int.tryParse(details['duration'].toString()) ?? 0;
+                                    if (details != null &&
+                                        details['duration'] != null) {
+                                      final duration =
+                                          int.tryParse(
+                                            details['duration'].toString(),
+                                          ) ??
+                                          0;
                                       totalDuration += duration;
                                     }
                                   }
                                 }
-                                
+
                                 return Row(
                                   children: [
                                     Expanded(
                                       child: VaultStatCard(
-                                        value: meditationCount.toString().padLeft(2, '0'),
+                                        value: meditationCount
+                                            .toString()
+                                            .padLeft(2, '0'),
                                         label: 'Meditations\nCreated',
                                       ),
                                     ),
-                                    const SizedBox(width: 16),
+                                    const SizedBox(width: 12),
                                     Expanded(
                                       child: VaultStatCard(
                                         value: totalDuration.toString(),
@@ -139,13 +168,16 @@ class DashboardVaultPage extends StatelessWidget {
                           const SizedBox(height: 24),
                           Consumer<MeditationStore>(
                             builder: (context, meditationStore, child) {
-                              final myMeditations = meditationStore.myMeditations;
-                              final meditationCount = myMeditations?.length ?? 0;
-                              
+                              final myMeditations =
+                                  meditationStore.myMeditations;
+                              final meditationCount =
+                                  myMeditations?.length ?? 0;
+
                               return Column(
                                 children: [
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
                                         'Your Saved Rituals ($meditationCount)',
@@ -156,32 +188,56 @@ class DashboardVaultPage extends StatelessWidget {
                                           fontFamily: 'Canela',
                                         ),
                                       ),
-                                      const Icon(Icons.chevron_right, color: Colors.white),
+                                      GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => MyMeditationsPage(),
+                                            ),
+                                          );
+                                        },
+                                        child: const Icon(
+                                        Icons.chevron_right,
+                                        color: Colors.white,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                   const SizedBox(height: 12),
-                                  if (myMeditations != null && myMeditations.isNotEmpty) ...[
-                                    if (meditationCount == 1) ...[
-                                      VaultRitualCard(
-                                        image: 'assets/img/card.png',
-                                        title: 'Sleep Stream',
-                                        subtitle: 'A deeply personalized journey crafted from your unique vision and dreams',
+                                  if (myMeditations != null &&
+                                      myMeditations.isNotEmpty) ...[
+                                    SizedBox(
+                                      height: 100,
+                                      child: ListView.builder(
+                                        scrollDirection: Axis.horizontal,
+                                        itemCount: meditationCount,
+                                        itemBuilder: (context, index) {
+                                          final meditation = myMeditations[index];
+                                          final details = meditation['details'];
+                                          final name = details?['name'] ?? 'Sleep Stream';
+                                          final meditationId = meditation['id']?.toString();
+
+                                          return Padding(
+                                            padding: EdgeInsets.only(
+                                              right: index < meditationCount - 1 ? 12.0 : 0,
+                                            ),
+                                            child: SizedBox(
+                                              width: MediaQuery.of(context).size.width - 32,
+                                              child: VaultRitualCard(
+                                            name: name,
+                                            meditationId: meditationId,
+                                                onAudioPlay: widget.onAudioPlay,
+                                              ),
+                                            ),
+                                          );
+                                        },
                                       ),
-                                    ] else ...[
-                                      ...myMeditations.map((meditation) => Padding(
-                                        padding: const EdgeInsets.only(bottom: 12.0),
-                                        child: VaultRitualCard(
-                                          image: 'assets/img/card.png',
-                                          title: 'Sleep Stream',
-                                          subtitle: 'A deeply personalized journey crafted from your unique vision and dreams',
-                                        ),
-                                      )),
-                                    ],
+                                    ),
                                   ] else ...[
                                     VaultRitualCard(
-                                      image: 'assets/img/card.png',
-                                      title: 'Sleep Stream',
-                                      subtitle: 'A deeply personalized journey crafted from your unique vision and dreams',
+                                      name: 'Sleep Stream',
+                                      onAudioPlay: widget.onAudioPlay,
                                     ),
                                   ],
                                 ],
@@ -191,16 +247,17 @@ class DashboardVaultPage extends StatelessWidget {
                           const SizedBox(height: 24),
                           Consumer<MeditationStore>(
                             builder: (context, meditationStore, child) {
-                              final archiveMeditation = meditationStore.archiveMeditation;
-                              final archiveCount = archiveMeditation?.length ?? 0;
-                              
+                              final libraryDatas = meditationStore.libraryDatas;
+                              final libraryCount = libraryDatas?.length ?? 0;
+
                               return Column(
                                 children: [
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
-                                        'The Archive ($archiveCount)',
+                                        'The Archive ($libraryCount)',
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 32,
@@ -208,32 +265,63 @@ class DashboardVaultPage extends StatelessWidget {
                                           fontFamily: 'Canela',
                                         ),
                                       ),
-                                      const Icon(Icons.chevron_right, color: Colors.white),
+                                      GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => ArchivePage(),
+                                            ),
+                                          );
+                                        },
+                                        child: const Icon(
+                                        Icons.chevron_right,
+                                        color: Colors.white,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                   const SizedBox(height: 12),
-                                  if (archiveMeditation != null && archiveMeditation.isNotEmpty) ...[
-                                    if (archiveCount == 1) ...[
-                                      VaultRitualCard(
-                                        image: 'assets/img/card.png',
-                                        title: 'Morning Meditation',
-                                        subtitle: 'Start your day with positive energy and clarity',
+                                  if (libraryDatas != null &&
+                                      libraryDatas.isNotEmpty) ...[
+                                    SizedBox(
+                                      height: 100,
+                                      child: ListView.builder(
+                                        scrollDirection: Axis.horizontal,
+                                        itemCount: libraryCount,
+                                        itemBuilder: (context, index) {
+                                          final meditation = libraryDatas[index];
+                                          final name = meditation['name'] ?? 'Library Meditation';
+                                          final meditationId = meditation['id']?.toString();
+                                          final file = meditation['file']?.toString();
+                                          final title = meditation['name']?.toString();
+                                          final description = meditation['description']?.toString();
+                                          final imageUrl = meditation['image']?.toString();
+                                          
+                                          return Padding(
+                                            padding: EdgeInsets.only(
+                                              right: index < libraryCount - 1 ? 12.0 : 0,
+                                            ),
+                                            child: SizedBox(
+                                              width: MediaQuery.of(context).size.width - 32,
+                                              child: VaultRitualCard(
+                                            name: name,
+                                            meditationId: meditationId,
+                                                file: file,
+                                                title: title,
+                                                description: description,
+                                                imageUrl: imageUrl,
+                                                onAudioPlay: widget.onAudioPlay,
+                                              ),
+                                            ),
+                                          );
+                                        },
                                       ),
-                                    ] else ...[
-                                      ...archiveMeditation.map((meditation) => Padding(
-                                        padding: const EdgeInsets.only(bottom: 12.0),
-                                        child: VaultRitualCard(
-                                          image: 'assets/img/card.png',
-                                          title: 'Morning Meditation',
-                                          subtitle: 'Start your day with positive energy and clarity',
-                                        ),
-                                      )),
-                                    ],
+                                    ),
                                   ] else ...[
                                     VaultRitualCard(
-                                      image: 'assets/img/card.png',
-                                      title: 'Morning Meditation',
-                                      subtitle: 'Start your day with positive energy and clarity',
+                                      name: 'Library Meditation',
+                                      onAudioPlay: widget.onAudioPlay,
                                     ),
                                   ],
                                 ],
@@ -241,21 +329,7 @@ class DashboardVaultPage extends StatelessWidget {
                             },
                           ),
                           const SizedBox(height: 24),
-                          VaultButtons(
-                            onContinue: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const DailyCheckInPage(),
-                                ),
-                              );
-                            },
-                            onHome: () {
-                              Navigator.of(
-                                context,
-                              ).pushReplacementNamed('/dashboard');
-                            },
-                          ),
+                          
                         ],
                       ),
                     ),

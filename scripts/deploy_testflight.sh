@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # TestFlight Deployment Script for Vela
-# Make sure you have Xcode and Apple Developer account set up
+# This script works without Apple IDs - you'll need to manually upload to App Store Connect
 
 set -e
 
@@ -11,6 +11,7 @@ echo "🚀 Starting TestFlight deployment for Vela..."
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Check if we're in the right directory
@@ -23,12 +24,6 @@ fi
 if ! command -v xcodebuild &> /dev/null; then
     echo -e "${RED}Error: Xcode is not installed or not in PATH${NC}"
     exit 1
-fi
-
-# Check if fastlane is installed
-if ! command -v fastlane &> /dev/null; then
-    echo -e "${YELLOW}Warning: fastlane not found. Installing via gem...${NC}"
-    sudo gem install fastlane
 fi
 
 echo -e "${GREEN}✅ Prerequisites check passed${NC}"
@@ -60,21 +55,25 @@ xcodebuild -exportArchive \
            -exportPath build/ios \
            -exportOptionsPlist exportOptions.plist
 
-# Upload to App Store Connect
-echo "☁️ Uploading to App Store Connect..."
-xcrun altool --upload-app \
-             --type ios \
-             --file "build/ios/Runner.ipa" \
-             --username "$APPLE_ID" \
-             --password "$APPLE_APP_SPECIFIC_PASSWORD" \
-             --verbose
-
-echo -e "${GREEN}✅ Upload completed successfully!${NC}"
-echo -e "${YELLOW}📋 Next steps:${NC}"
-echo "1. Go to App Store Connect (https://appstoreconnect.apple.com)"
-echo "2. Navigate to your app > TestFlight"
-echo "3. Wait for processing to complete (usually 5-15 minutes)"
-echo "4. Add internal testers or create external testing groups"
-echo "5. Submit for Beta App Review if needed"
+echo -e "${GREEN}✅ Build completed successfully!${NC}"
+echo ""
+echo -e "${BLUE}📋 Manual Upload Instructions:${NC}"
+echo "1. Open Xcode"
+echo "2. Go to Window > Organizer"
+echo "3. Select your app"
+echo "4. Click 'Distribute App'"
+echo "5. Choose 'App Store Connect'"
+echo "6. Select 'Upload'"
+echo "7. Choose the .ipa file from: $(pwd)/build/ios/Runner.ipa"
+echo "8. Follow the signing and upload process"
+echo ""
+echo -e "${YELLOW}📱 Alternative: Use Transporter app${NC}"
+echo "1. Download Transporter from Mac App Store"
+echo "2. Open Transporter"
+echo "3. Drag and drop the .ipa file: $(pwd)/build/ios/Runner.ipa"
+echo "4. Sign in with your Apple ID"
+echo "5. Click 'Deliver'"
+echo ""
+echo -e "${GREEN}✅ Your .ipa file is ready at: $(pwd)/build/ios/Runner.ipa${NC}"
 
 cd .. 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import '../../main.dart' show globalMeditationId;
 import 'home.dart';
 import 'vault.dart';
 import 'check_in.dart';
@@ -8,24 +9,58 @@ import 'components/home_icon.dart';
 import 'components/vault_icon.dart';
 import 'components/check_icon.dart';
 import 'components/profile_icon.dart';
+import 'components/dashboard_audio_player.dart';
 import '../generator/generator_page.dart';
+import '../auth/onboarding_page_1.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class DashboardMainPage extends StatefulWidget {
   const DashboardMainPage({super.key});
 
   @override
-  State<DashboardMainPage> createState() => _DashboardMainPageState();
+  State<DashboardMainPage> createState() => DashboardMainPageState();
 }
 
-class _DashboardMainPageState extends State<DashboardMainPage> {
+class DashboardMainPageState extends State<DashboardMainPage> {
   int _selectedIndex = 0;
-  final List<Widget> _pages = [
+  String? _currentAudioId;
+
+  @override
+  void initState() {
+    super.initState();
+    // Check if there's a global meditation ID to play
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (globalMeditationId != null) {
+        showAudioPlayer(globalMeditationId!);
+        globalMeditationId = null; // Clear the global variable
+      }
+    });
+  }
+
+  List<Widget> get _pages => [
     DashboardHomePage(),
-    DashboardVaultPage(),
+    DashboardVaultPage(
+      onAudioPlay: (meditationId) {
+        setState(() {
+          _currentAudioId = meditationId;
+          _selectedIndex = 4; // Audio player is at index 4
+        });
+      },
+    ),
     DashboardCheckInPage(),
     DashboardProfilePage(),
+    if (_currentAudioId != null)
+      DashboardAudioPlayer(
+        meditationId: _currentAudioId!,
+      ),
   ];
+
+  void showAudioPlayer(String meditationId) {
+    setState(() {
+      _currentAudioId = meditationId;
+      _selectedIndex = 4; // Audio player is at index 4
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,13 +70,13 @@ class _DashboardMainPageState extends State<DashboardMainPage> {
 
         Scaffold(
           body: _pages[_selectedIndex],
-          backgroundColor: Colors.transparent, // Scaffold background transparent bo‘lsin
+          backgroundColor: _selectedIndex == 0 ? Color(0xFF5799D6) : Colors.transparent, // Home page uchun rang, boshqalari uchun transparent
           bottomNavigationBar: Container(
             margin: const EdgeInsets.only(bottom: 0),
             padding: !kIsWeb && (Theme.of(context).platform == TargetPlatform.iOS)
               ? EdgeInsets.only(
                   top: 10,
-                  bottom: 20 + MediaQuery.of(context).viewPadding.bottom,
+                  bottom: 5 + MediaQuery.of(context).viewPadding.bottom,
                   left: 20,
                   right: 20,
                 )
@@ -127,16 +162,7 @@ class _DashboardMainPageState extends State<DashboardMainPage> {
                   icon: ProfileIcon(filled: _selectedIndex == 3, opacity: _selectedIndex == 3 ? 1.0 : 0.5),
                   label: 'Profile',
                   selected: _selectedIndex == 3,
-                  onTap: () {
-                    Fluttertoast.showToast(
-                      msg: "This page is under construction.",
-                      toastLength: Toast.LENGTH_SHORT,
-                      gravity: ToastGravity.TOP,
-                      backgroundColor: Colors.blue,
-                      textColor: Colors.white,
-                    );
-                    // setState(() => _selectedIndex = 3); // Agar sahifaga o‘tishni xohlamasangiz, bu qatorni olib tashlang
-                  },
+                  onTap: () => setState(() => _selectedIndex = 3),
                 ),
               ],
             ),
@@ -163,6 +189,7 @@ class _NavItem extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
+        width: 70, // Fixed width for nav items
         margin: const EdgeInsets.only(top: 10),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -175,6 +202,7 @@ class _NavItem extends StatelessWidget {
                 color: selected ? Color(0xFF3B6EAA) : Color(0xFF3B6EAA).withValues(alpha: 0.5),
                 fontWeight: selected ? FontWeight.bold : FontWeight.normal,
               ),
+              textAlign: TextAlign.center, // Center align text
             ),
           ],
         ),

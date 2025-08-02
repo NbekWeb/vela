@@ -2,7 +2,7 @@ class WeeklyLoginStats {
   final String weekStart;
   final String weekEnd;
   final int totalLoginsThisWeek;
-  final Map<String, DayStats> days;
+  final List<DayStats> days;
 
   WeeklyLoginStats({
     required this.weekStart,
@@ -12,60 +12,58 @@ class WeeklyLoginStats {
   });
 
   factory WeeklyLoginStats.fromJson(Map<String, dynamic> json) {
-    final daysMap = <String, DayStats>{};
-    final daysJson = json['days'] as Map<String, dynamic>;
+    List<DayStats> daysList = [];
     
-    daysJson.forEach((key, value) {
-      daysMap[key] = DayStats.fromJson(value);
-    });
+    if (json['days'] != null) {
+      if (json['days'] is List) {
+        // New format: array of day objects
+        final daysJson = json['days'] as List;
+        daysList = daysJson.map((item) => DayStats.fromJson(item)).toList();
+      } else if (json['days'] is Map) {
+        // Old format: map with day names as keys
+        final daysJson = json['days'] as Map<String, dynamic>;
+        daysList = daysJson.values.map((value) => DayStats.fromJson(value)).toList();
+      }
+    }
 
     return WeeklyLoginStats(
       weekStart: json['week_start'] ?? '',
       weekEnd: json['week_end'] ?? '',
       totalLoginsThisWeek: json['total_logins_this_week'] ?? 0,
-      days: daysMap,
+      days: daysList,
     );
   }
 
   Map<String, dynamic> toJson() {
-    final daysJson = <String, dynamic>{};
-    days.forEach((key, value) {
-      daysJson[key] = value.toJson();
-    });
-
     return {
       'week_start': weekStart,
       'week_end': weekEnd,
       'total_logins_this_week': totalLoginsThisWeek,
-      'days': daysJson,
+      'days': days.map((day) => day.toJson()).toList(),
     };
   }
 }
 
 class DayStats {
-  final String date;
-  final bool loggedIn;
-  final int dayNumber;
+  final String name;
+  final bool login;
 
   DayStats({
-    required this.date,
-    required this.loggedIn,
-    required this.dayNumber,
+    required this.name,
+    required this.login,
   });
 
   factory DayStats.fromJson(Map<String, dynamic> json) {
     return DayStats(
-      date: json['date'] ?? '',
-      loggedIn: json['logged_in'] ?? false,
-      dayNumber: json['day_number'] ?? 0,
+      name: json['name'] ?? '',
+      login: json['login'] ?? false,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'date': date,
-      'logged_in': loggedIn,
-      'day_number': dayNumber,
+      'name': name,
+      'login': login,
     };
   }
 }
@@ -131,7 +129,20 @@ class UserModel {
     // Parse weekly login stats
     WeeklyLoginStats? weeklyStats;
     if (json['weekly_login_stats'] != null) {
-      weeklyStats = WeeklyLoginStats.fromJson(json['weekly_login_stats']);
+      if (json['weekly_login_stats'] is List) {
+        // New format: direct array of day objects
+        final daysJson = json['weekly_login_stats'] as List;
+        final daysList = daysJson.map((item) => DayStats.fromJson(item)).toList();
+        weeklyStats = WeeklyLoginStats(
+          weekStart: '',
+          weekEnd: '',
+          totalLoginsThisWeek: daysList.where((day) => day.login).length,
+          days: daysList,
+        );
+      } else {
+        // Old format: WeeklyLoginStats object
+        weeklyStats = WeeklyLoginStats.fromJson(json['weekly_login_stats']);
+      }
     }
 
     // Parse check-ins

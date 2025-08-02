@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../shared/widgets/stars_animation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../core/stores/auth_store.dart';
 
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({super.key});
@@ -32,6 +34,18 @@ class _LoadingScreenState extends State<LoadingScreen>
   }
 
   Future<void> _startBreathing() async {
+    // Check if user is authenticated first
+    final authStore = Provider.of<AuthStore>(context, listen: false);
+    final isAuthenticated = await authStore.isAuthenticated();
+    
+    if (isAuthenticated) {
+      // User is authenticated, go directly to dashboard
+      if (!mounted) return;
+      Navigator.of(context).pushReplacementNamed('/dashboard');
+      return;
+    }
+    
+    // User is not authenticated, show breathing animation
     // Breathe In: circle grows from 0 to max and stays
     setState(() {
       _isIn = true;
@@ -56,7 +70,7 @@ class _LoadingScreenState extends State<LoadingScreen>
     // If we reach here, it means user is not authenticated
     // Navigate to starter page
     if (!mounted) return;
-    Navigator.of(context).pushReplacementNamed('/starter');
+    Navigator.of(context).pushReplacementNamed('/onboarding-1');
   }
 
   @override

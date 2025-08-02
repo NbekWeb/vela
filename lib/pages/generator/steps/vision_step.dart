@@ -68,82 +68,85 @@ class _VisionStepState extends State<VisionStep> {
 
   @override
   Widget build(BuildContext context) {
-    return StepScaffold(
-      title: '',
-      onBack: widget.onBack,
-      onNext: widget.onNext,
-      currentStep: widget.currentStep,
-      totalSteps: widget.totalSteps,
-      nextEnabled: _controller.text.trim().isNotEmpty,
-      stepperIndex: widget.stepperIndex,
-      stepperCount: widget.stepperCount,
-      // Faqat content scroll bo'ladi!
-      child: Expanded(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const Text(
-                  'Tell me about your dream life',
-                  style: TextStyle(
-                    fontFamily: 'Canela',
-                    fontWeight: FontWeight.w300,
-                    fontSize: 36,
-                    color: Color(0xFFF2EFEA),
-                  ),
-                  textAlign: TextAlign.center,
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(
+        physics: const NeverScrollableScrollPhysics(),
+      ),
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.opaque,
+        child: StepScaffold(
+          title: '',
+          onBack: widget.onBack,
+          onNext: widget.onNext,
+          currentStep: widget.currentStep,
+          totalSteps: widget.totalSteps,
+          nextEnabled: _controller.text.trim().isNotEmpty,
+          stepperIndex: widget.stepperIndex,
+          stepperCount: widget.stepperCount,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const Text(
+                'Tell me about your dream life',
+                style: TextStyle(
+                  fontFamily: 'Canela',
+                  fontWeight: FontWeight.w300,
+                  fontSize: 36,
+                  color: Color(0xFFF2EFEA),
                 ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Tell me about your dream life',
-                  style: TextStyle(
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Be sure to include Sensory Details: What does  it look and feel like? What are you doing? Who are you with? What do you see, hear, smell?',
+                style: TextStyle(
+                  fontFamily: 'Satoshi',
+                  fontWeight: FontWeight.w500,
+                  fontSize: 18,
+                  color: Color(0xFFF2EFEA),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: TextField(
+                  controller: _controller,
+                  minLines: 3,
+                  maxLines: 6,
+                  style: const TextStyle(
+                    color: Colors.white,
                     fontFamily: 'Satoshi',
-                    fontWeight: FontWeight.w500,
-                    fontSize: 18,
-                    color: Color(0xFFF2EFEA),
+                    fontSize: 12,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity,
-                  child: TextField(
-                    controller: _controller,
-                    minLines: 3,
-                    maxLines: 6,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontFamily: 'Satoshi',
-                      fontSize: 12,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'I see living in a cozy house and I am waking up with energy...',
-                      hintStyle: const TextStyle(color: Color(0xFFB0B8C1)),
-                      filled: true,
-                      fillColor: Color(0x152B561A),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(
-                          color: Color(0x152B561A),
-                          width: 1,
-                        ),
+                  decoration: InputDecoration(
+                    hintText: 'I see living in a cozy house and I am waking up with energy...',
+                    hintStyle: const TextStyle(color: Color(0xFFffffff)),
+                    filled: true,
+                    fillColor: Color(0x152B561A),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(
+                        color: Color(0x152B561A),
+                        width: 1,
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(
-                          color: Color(0xFF152B56),
-                          width: 1,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.all(16),
                     ),
-                    onChanged: _onDreamChanged,
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF152B56),
+                        width: 1,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.all(16),
                   ),
+                  onChanged: _onDreamChanged,
                 ),
-              ],
-            ),
+              ),
+                 const SizedBox(height: 60),
+            ],
           ),
         ),
       ),
